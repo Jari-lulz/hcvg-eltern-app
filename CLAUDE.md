@@ -34,6 +34,11 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Ergebnisse, Tabellen und Statistik stehen in den Reitern D-Jugend und C-Jugend.
 - Gelbe Karten und Zeitstrafen sind bei Jugendspielen anonym, also nur pro Mannschaft verfügbar.
 
+## Bilder
+- `img/logo.webp` (Vereinswappen, Kopf + Favicon), `img/team-kreis.jpg` (Mannschaftskreis von oben, kaum Gesichter; Banner auf der Startseite, auf 900px verkleinert).
+- Repo und Seite sind öffentlich: Fotos mit erkennbaren Kindergesichtern nur mit Einverständnis der Eltern einbauen. Seite hat `noindex`.
+- Der Workflow kopiert `img/` mit nach `_site`.
+
 ## Design
 - Farben als CSS-Tokens in `:root`, Hell- und Dunkelmodus.
 - Schriften: Barlow Condensed (Überschriften), Figtree (Text).

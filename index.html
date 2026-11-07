@@ -3,6 +3,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HCVG Mädels-Spieltag</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="img/logo.webp" type="image/webp">
+<link rel="apple-touch-icon" href="img/logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
@@ -32,7 +35,17 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-header{padding-top:18px;display:flex;flex-direction:column;gap:4px}
+header{padding-top:18px;display:flex;align-items:center;gap:12px}
+header .ht{display:flex;flex-direction:column;gap:4px;min-width:0}
+header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+/* Team-Banner auf der Startseite */
+.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/10;max-width:100%;background:var(--court)}
+.hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
+.hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
+.hero .cap b{font:800 30px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
+.hero .cap b em{font-style:normal;color:var(--tape)}
+.hero .cap span{font:600 13px/1.3 var(--body);opacity:.9}
 .eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 h1{font:800 34px/1 var(--display);letter-spacing:.01em;margin:0;text-transform:uppercase;text-wrap:balance}
 h1 span{color:var(--court)}
@@ -191,8 +204,11 @@ tr.mine td:first-child{color:var(--ink)}
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">HC Vorpommern-Greifswald · weibliche Jugend</div>
-    <h1>Spieltag <span>kompakt</span></h1>
+    <img class="logo" src="img/logo.webp" alt="Wappen HC Vorpommern-Greifswald" width="56" height="56">
+    <div class="ht">
+      <div class="eyebrow">HC Vorpommern-Greifswald · weibliche Jugend</div>
+      <h1>Spieltag <span>kompakt</span></h1>
+    </div>
   </header>
 
   <div class="switch">
@@ -425,7 +441,9 @@ function nextCard(k){
 }
 
 function viewUs(){
-  return nextCard("C") + nextCard("D") + trainingTile();
+  const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
+    <figcaption class="cap"><b>Ein Team. <em>Ein Kreis.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
+  return hero + nextCard("C") + nextCard("D") + trainingTile();
 }
 
 const st = { filterMine:{D:false,C:false}, sub:{D:"spiele",C:"spiele"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, cmp:{D:"gf",C:"gf"} };
