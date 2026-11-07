@@ -1,0 +1,233 @@
+# Holt Tabellen, Spielplaene und Spielberichte von nuLiga (HVMV) und schreibt data.js.
+# Laeuft mit Windows PowerShell 5.1 und PowerShell 7 (auch auf GitHub Actions).
+# Aufruf:  powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
+
+$ErrorActionPreference = 'Stop'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+$Root    = Split-Path -Parent $PSScriptRoot
+$CacheDir = Join-Path $PSScriptRoot 'cache'
+$OutFile = Join-Path $Root 'data.js'
+if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir | Out-Null }
+
+$Base  = 'https://hvmv-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa'
+$Champ = 'BHV+Ost+26%2F27'
+$Leagues = [ordered]@{
+  D = @{ name = 'Bezirksoberliga wJD'; group = '486919' }
+  C = @{ name = 'Bezirksoberliga wJC'; group = '486898' }
+}
+
+function Get-Page([string]$url) {
+  Start-Sleep -Milliseconds 400   # nuLiga schonen
+  $r = Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{ 'User-Agent' = 'HCVG-Eltern-App (Spielplan-Update)' }
+  $text = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())
+  return ($text -replace '\s+', ' ')
+}
+
+function Clean([string]$s) {
+  if ($null -eq $s) { return '' }
+  $t = $s -replace '<[^>]+>', ' '
+  $t = [System.Net.WebUtility]::HtmlDecode($t)
+  $t = $t -replace [char]0xA0, ' '
+  return ($t -replace '\s+', ' ').Trim()
+}
+
+function ToInt([string]$s) { $c = Clean $s; if ($c -match '^-?\d+$') { return [int]$c } else { return 0 } }
+
+# "Adam, Fabienne" -> "Fabienne A." (Kinder: nur Vorname + Initiale)
+function ShortName([string]$s) {
+  $c = Clean $s
+  if ($c -notmatch ',') { return $c }
+  $parts = $c.Split(',', 2)
+  $last = $parts[0].Trim(); $first = $parts[1].Trim()
+  $lastWord = ($last -split ' ')[-1]
+  if (-not $lastWord) { return $first }
+  return "$first $($lastWord.Substring(0,1))."
+}
+
+function Get-Cells([string]$rowHtml) {
+  $list = @()
+  foreach ($m in [regex]::Matches($rowHtml, '<td([^>]*)>(.*?)</td>')) {
+    $list += , @($m.Groups[1].Value, $m.Groups[2].Value)
+  }
+  return , $list
+}
+
+function Get-TableAfter([string]$html, [string]$marker) {
+  $i = $html.IndexOf($marker)
+  if ($i -lt 0) { return '' }
+  $j = $html.IndexOf('<table', $i)
+  $k = $html.IndexOf('</table>', $j)
+  return $html.Substring($j, $k - $j)
+}
+
+function Parse-Table([string]$html) {
+  $tbl = Get-TableAfter $html 'Tabelle</h2>'
+  $rows = @()
+  foreach ($tr in ($tbl -split '<tr')) {
+    if ($tr -match '<th') { continue }
+    $c = Get-Cells $tr
+    if ($c.Count -lt 10) { continue }
+    $tore = Clean $c[7][1]
+    $diff = (Clean $c[8][1]) -replace '\+', ''
+    $rows += , @((Clean $c[2][1]), (ToInt $c[3][1]), (ToInt $c[4][1]), (ToInt $c[5][1]), (ToInt $c[6][1]), $tore, [int]$diff, (Clean $c[9][1]))
+  }
+  return , $rows
+}
+
+$HallNames = @{}
+
+function Parse-Games([string]$html) {
+  $tbl = Get-TableAfter $html 'Spielplan (Gesamt)</h2>'
+  $games = @()
+  $prevDate = ''
+  foreach ($tr in ($tbl -split '<tr')) {
+    if ($tr -match '<th') { continue }
+    $c = Get-Cells $tr
+    if ($c.Count -lt 8) { continue }
+    $date = ''
+    if ($c[0][0] -match 'colspan="2"') {
+      # "Termin offen": eine Zelle weniger -> ausrichten
+      $c = , $c[0] + , @('', '') + $c[1..($c.Count - 1)]
+    } else {
+      $d = Clean $c[1][1]
+      if ($d -match '\d{2}\.\d{2}\.\d{4}') { $date = $Matches[0] }
+      elseif ($c[0][0] -match 'tabelle-rowspan') { $date = $prevDate }
+      $prevDate = $date
+    }
+    $timeTxt = Clean $c[2][1]
+    $time = ''; if ($timeTxt -match '\d{2}:\d{2}') { $time = $Matches[0] }
+    $note = ''
+    if ($c[2][0] -match 'title="([^"]*verlegt[^"]*)"') { $note = 'verlegt' }
+    if (-not $date) { $note = 'Termin offen' }
+    $loc = ''; if ($c[3][1] -match 'location=(\d+)') { $loc = $Matches[1] }
+    if ($loc -and $c[3][1] -match 'title="([^"]+)"') { $HallNames[$loc] = [System.Net.WebUtility]::HtmlDecode($Matches[1]) }
+    $hm = Clean $c[5][1]; $away = Clean $c[6][1]
+    if ($hm -match 'ENDRUNDE' -or $away -match 'ENDRUNDE') { $note = 'Endrunde' }
+    $resCell = $c[7][1]
+    $res = ''; $mid = ''; $ref = ''
+    if ($resCell -match 'meeting=(\d+)') { $mid = $Matches[1] }
+    $resTxt = Clean $resCell
+    if ($resTxt -match '^(\d+:\d+)') { $res = $Matches[1] }
+    elseif ($resCell -match '<span title="([^"]+)"') { $ref = $Matches[1] }   # angesetzter Schiri
+    $approved = [bool]($tr -match 'Spielbericht genehmigt')
+    $games += , @($date, $time, $loc, $hm, $away, $res, $note, $mid, $approved, $ref)
+  }
+  return , $games
+}
+
+function Parse-Players([string]$tbody) {
+  $out = @()
+  foreach ($tr in ($tbody -split '<tr')) {
+    $c = Get-Cells $tr
+    if ($c.Count -lt 12) { continue }
+    $nr = Clean $c[0][1]
+    if ($nr -notmatch '^\d+$') { continue }   # Offizielle (A, B, ...) weglassen
+    $person = ''; if ($c[1][1] -match 'person=(\d+)') { $person = $Matches[1] }
+    $s7 = Clean $c[5][1]; $g7 = 0; $a7 = 0
+    if ($s7 -match '(\d+)/(\d+)') { $g7 = [int]$Matches[1]; $a7 = [int]$Matches[2] }
+    $two = 0; foreach ($k in 7, 8, 9) { if ((Clean $c[$k][1]) -ne '') { $two++ } }
+    $dq = 0; foreach ($k in 10, 11) { if ((Clean $c[$k][1]) -ne '') { $dq++ } }
+    $yel = 0; if ((Clean $c[6][1]) -ne '') { $yel = 1 }
+    $out += , @([int]$nr, (ShortName $c[1][1]), $person, (ToInt $c[4][1]), $g7, $a7, $yel, $two, $dq)
+  }
+  return , $out
+}
+
+function Parse-Report([string]$html) {
+  $teams = [regex]::Matches($html, '<thead>(?:(?!</thead>).)*Trikot.*?</thead>\s*<tbody>(.*?)</tbody>')
+  $sum = {
+    param($label, $idx)
+    $m = [regex]::Matches($html, "<td>$([regex]::Escape($label))</td>\s*<td>([^<]*)</td>")
+    if ($m.Count -gt $idx) { return (ToInt $m[$idx].Groups[1].Value) } else { return 0 }
+  }
+  $side = {
+    param($idx)
+    $p = @(); if ($teams.Count -gt $idx) { $p = Parse-Players $teams[$idx].Groups[1].Value }
+    $to = 0
+    foreach ($t in 1, 2, 3) {
+      $m = [regex]::Matches($html, "<td>Timeout $t</td>\s*<td>([^<]*)</td>")
+      if ($m.Count -gt $idx -and (Clean $m[$idx].Groups[1].Value) -ne '') { $to++ }
+    }
+    return [ordered]@{
+      p  = $p
+      s7 = (& $sum '7-Meter' $idx); g7 = (& $sum '7-Meter-Tore' $idx)
+      m2 = (& $sum '2-Minuten' $idx); y = (& $sum 'gelbe Karten' $idx)
+      d  = (& $sum 'Disqualifikationen' $idx); to = $to
+    }
+  }
+  $ht = ''
+  if ($html -match '<td>Ergebnis</td>\s*<td>\s*\d+:\d+\s*\((\d+:\d+)\)') { $ht = $Matches[1] }
+  $sr = @()
+  $pers = Get-TableAfter $html 'Personen</h2>'
+  foreach ($tr in ($pers -split '<tr')) {
+    $c = Get-Cells $tr
+    if ($c.Count -ge 2 -and (Clean $c[0][1]) -match '^SR') { $sr += (ShortName $c[1][1]) }
+  }
+  $ev = @()
+  $tl = Get-TableAfter $html 'Spielverlauf</h2>'
+  foreach ($tr in ($tl -split '<tr')) {
+    $c = Get-Cells $tr
+    if ($c.Count -lt 4) { continue }
+    $team = Clean $c[0][1]; $time = Clean $c[1][1]; $what = Clean $c[3][1]
+    if ($time -notmatch '^(\d+):(\d+)$') { continue }
+    $sec = [int]$Matches[1] * 60 + [int]$Matches[2]
+    $s = 0
+    if ($team -eq 'Heim' -or $what -match 'Heim') { $s = 1 } elseif ($team -eq 'Gast' -or $what -match 'Gast') { $s = 2 }
+    $code = switch -Regex ($what) {
+      '^Tor$' { 'g' } '7m mit Tor' { '7g' } '7m ohne Tor' { '7x' } 'Verwarnung' { 'y' }
+      '2-?min|Zeitstrafe' { '2' } 'Disqual' { 'd' } 'Auszeit' { 't' } default { $what }
+    }
+    $ev += , @($sec, $s, $code)
+  }
+  return [ordered]@{ ht = $ht; sr = $sr; h = (& $side 0); a = (& $side 1); ev = $ev }
+}
+
+$out = [ordered]@{
+  updated = (Get-Date).ToString('dd.MM.yyyy, HH:mm') + ' Uhr'
+  leagues = [ordered]@{}
+  halls   = @{}
+}
+
+foreach ($key in $Leagues.Keys) {
+  $L = $Leagues[$key]
+  Write-Host "Liga $key ($($L.group)) ..."
+  $tablePage = Get-Page "$Base/groupPage?championship=$Champ&group=$($L.group)"
+  $gamesPage = Get-Page "$Base/groupPage?championship=$Champ&group=$($L.group)&displayTyp=vorrunde&displayDetail=meetings"
+  $table = Parse-Table $tablePage
+  $games = Parse-Games $gamesPage
+  $reports = [ordered]@{}
+  $outGames = @()
+  foreach ($g in $games) {
+    $mid = $g[7]
+    if ($mid -and $g[5]) {
+      $cacheFile = Join-Path $CacheDir "$mid.json"
+      $rep = $null
+      if (Test-Path $cacheFile) {
+        $rep = [IO.File]::ReadAllText($cacheFile, [Text.Encoding]::UTF8)
+      } else {
+        Write-Host "  Spielbericht $mid"
+        $obj = Parse-Report (Get-Page "$Base/groupMeetingReport?meeting=$mid&championship=$Champ&group=$($L.group)")
+        $rep = ConvertTo-Json -InputObject $obj -Depth 8 -Compress
+        if ($g[8]) { [IO.File]::WriteAllText($cacheFile, $rep, (New-Object Text.UTF8Encoding $false)) }  # nur genehmigte cachen
+      }
+      $reports[$mid] = '@@' + $mid + '@@'
+      Set-Variable -Name "rep_$mid" -Value $rep -Scope Script
+    }
+    # [Datum, Zeit, Halle, Heim, Gast, Ergebnis, Notiz, Bericht-ID, angesetzter Schiri]
+    $refShort = ''
+    if ($g[9] -match '/') { $refShort = ($g[9] -replace [string][char]0xA7, '').Trim() }   # z. B. "Heim-/Gastverein" stellt den Schiri
+    elseif ($g[9]) { $p = $g[9].Trim() -split ' '; if ($p.Count -ge 2) { $refShort = "$($p[1]) $($p[0].Substring(0,1))." } else { $refShort = $g[9] } }
+    $outGames += , @($g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $refShort)
+  }
+  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports }
+}
+foreach ($k in $HallNames.Keys) { $out.halls[$k] = $HallNames[$k] }
+
+$json = ConvertTo-Json -InputObject $out -Depth 10 -Compress
+# Berichte als fertiges JSON einsetzen (vermeidet doppeltes Umwandeln)
+$json = [regex]::Replace($json, '"@@(\d+)@@"', { param($m) (Get-Variable -Name "rep_$($m.Groups[1].Value)" -Scope Script).Value })
+
+$js = "// Automatisch erzeugt von tools/update-data.ps1 - nicht von Hand bearbeiten.`nwindow.HCVG_DATA = $json;`n"
+[IO.File]::WriteAllText($OutFile, $js, (New-Object Text.UTF8Encoding $false))
+Write-Host "Fertig: $OutFile ($([Math]::Round($js.Length/1KB)) KB)"

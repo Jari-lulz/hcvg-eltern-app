@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HCVG Mädels-Spieltag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow phone column — sticky team switcher on top, "next game" scoreboard card, then lists. Court-floor navy + court-line yellow. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --ink:#0f1c33; --muted:#5a6680; --line:#d6dce8;
+  --court:#16305e; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
+  --us:#e6edfb; --win:#1e8a4c; --loss:#c23b3b; --draw:#8a6d1e;
+  --accent:var(--court); --bar-them:#b9c3d6;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1220; --surface:#131d31; --ink:#e8edf7; --muted:#9aa6bf; --line:#26324a;
+  --court:#1c3a70; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
+  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --surface:#131d31; --ink:#e8edf7; --muted:#9aa6bf; --line:#26324a;
+  --court:#1c3a70; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
+  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header{padding-top:18px;display:flex;flex-direction:column;gap:4px}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 34px/1 var(--display);letter-spacing:.01em;margin:0;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--court)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h1 span{color:var(--tape)}}
+:root[data-theme="dark"] h1 span{color:var(--tape)}
+h2{font:700 22px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0}
+h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em;margin:0}
+.switch{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{font:700 16px/1 var(--display);text-transform:uppercase;letter-spacing:.04em;border:0;background:transparent;color:var(--muted);padding:11px 6px;border-radius:9px;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--court);color:var(--court-ink)}
+.seg button:focus-visible,.btn:focus-visible,.chip:focus-visible,.sub button:focus-visible,summary:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+
+/* Unter-Navigation je Liga */
+.sub{display:flex;gap:6px;border-bottom:2px solid var(--line)}
+.sub button{font:700 15px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;background:none;border:0;color:var(--muted);padding:10px 12px 12px;margin-bottom:-2px;border-bottom:3px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.sub button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--tape)}
+.sub .ld{width:8px;height:8px;border-radius:50%;background:var(--loss)}
+
+/* Scoreboard card */
+.board{background:var(--court);color:var(--court-ink);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.board::after{content:"";position:absolute;right:-70px;top:-70px;width:200px;height:200px;border:3px dashed rgba(255,255,255,.18);border-radius:50%;pointer-events:none}
+.board .when{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.board .date{font:700 20px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.count{font:800 14px/1 var(--display);background:var(--tape);color:var(--tape-ink);padding:6px 9px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
+.match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.team{font:800 24px/1.05 var(--display);text-transform:uppercase;text-wrap:balance;min-width:0}
+.team.away{text-align:right}
+.team.us{color:var(--tape)}
+.vs{font:700 14px/1 var(--display);opacity:.7}
+.hall{font-size:14px;opacity:.92}
+.hall b{display:block;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;font:600 14px/1 var(--body);text-decoration:none;border-radius:10px;padding:11px 14px;border:0;cursor:pointer}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.primary{background:var(--tape);color:var(--tape-ink)}
+.btn.ghost{background:rgba(255,255,255,.12);color:var(--court-ink)}
+.btn.line{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.lg{font:700 12px/1 var(--display);letter-spacing:.06em;padding:4px 6px;border-radius:5px;background:var(--tape);color:var(--tape-ink);text-transform:uppercase}
+
+/* Training */
+.train{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tape);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.train .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.train .new{font:700 12px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--loss);color:#fff;padding:5px 7px;border-radius:5px}
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.day{background:var(--bg);border-radius:10px;padding:10px 8px;text-align:center}
+.day b{display:block;font:800 22px/1 var(--display);text-transform:uppercase;color:var(--accent)}
+.day span{font-size:13px;color:var(--muted)}
+.day span.set{color:var(--ink);font-weight:600}
+.train .where{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+
+/* lists */
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.list>*+*{border-top:1px solid var(--line)}
+.g{display:grid;grid-template-columns:62px 1fr auto;gap:12px;padding:12px 14px;align-items:center}
+.g.mine{background:var(--us)}
+details.gd>summary{list-style:none;cursor:pointer;grid-template-columns:62px 1fr auto 14px}
+details.gd>summary::-webkit-details-marker{display:none}
+.chev{width:14px;height:14px;color:var(--muted);transition:transform .2s}
+details[open]>summary .chev{transform:rotate(180deg)}
+.gx{padding:4px 14px 16px;display:flex;flex-direction:column;gap:12px;font-size:14px}
+.gx .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted)}
+.gx .meta b{color:var(--ink);font-weight:600}
+.sc{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sc h4{font:700 14px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+.sc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.sc li{display:flex;justify-content:space-between;gap:8px}
+.sc li span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+.sc .tt{margin-top:6px;font-size:12px;color:var(--muted)}
+.mom{display:flex;flex-direction:column;gap:4px}
+.mom svg{width:100%;height:72px;display:block}
+.mom .lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.d{font:700 15px/1.1 var(--display);text-transform:uppercase;font-variant-numeric:tabular-nums}
+.d small{display:block;font:500 12px/1.3 var(--body);color:var(--muted);text-transform:none}
+.mt{min-width:0}
+.mt .t{font-weight:600;overflow-wrap:anywhere}
+.usn{color:var(--accent);font-weight:700}
+.mt .h{font-size:13px;color:var(--muted)}
+.res{font:800 20px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.res.w{color:var(--win)} .res.l{color:var(--loss)} .res.x{color:var(--draw)}
+.res small{display:block;font:600 11px/1.2 var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.mapbtn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--court);color:var(--court-ink);text-decoration:none}
+.mapbtn svg{width:18px;height:18px}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:10px 8px;text-align:right;white-space:nowrap}
+th{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+td{border-top:1px solid var(--line)}
+tr:first-child td{border-top:0}
+th:nth-child(2),td:nth-child(2){text-align:left;white-space:normal}
+td:first-child{font:800 18px/1 var(--display);text-align:center;color:var(--muted);width:34px}
+td.pts{font:800 18px/1 var(--display)}
+tr.mine td{background:var(--us);font-weight:700}
+tr.mine td:first-child{color:var(--ink)}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sechead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 13px/1 var(--body);padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.live{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--loss);flex:none;box-shadow:0 0 0 4px color-mix(in srgb,var(--loss) 25%,transparent)}
+@media (prefers-reduced-motion:no-preference){.dot,.sub .ld{animation:pulse 1.6s infinite}@keyframes pulse{50%{opacity:.35}}}
+.live p{margin:0;font-size:14px;color:var(--muted)}
+.live b{color:var(--ink);display:block;font-size:15px}
+.live .btn{margin-left:auto}
+.livebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;height:min(75vh,720px)}
+.livebox iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.halls{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.hc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.hc .nm{font-weight:700}
+.hc .ad{font-size:14px;color:var(--muted)}
+.hc .btn{align-self:flex-start}
+.note{font-size:13px;color:var(--muted)}
+.empty{padding:16px;color:var(--muted)}
+
+/* Statistik */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;gap:4px}
+.kpi b{font:800 28px/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted);line-height:1.25}
+.kpi.hero{background:var(--court);border-color:var(--court);color:var(--court-ink)}
+.kpi.hero b{color:var(--tape)}
+.kpi.hero span{color:rgba(255,255,255,.8)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.cols{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:18px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.col .pair{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:4px}
+.col .bar{width:42%;max-width:26px;border-radius:5px 5px 0 0;position:relative;min-height:2px}
+.col .bar i{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font:700 12px/1 var(--display);font-style:normal;color:var(--muted)}
+.col .bar.us{background:var(--accent)}
+.col .bar.them{background:var(--bar-them)}
+.col small{font-size:11px;color:var(--muted);white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ptbl td:first-child{font:700 14px/1 var(--display)}
+.ptbl td.nm{font-weight:600}
+.gbar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.gbar s{display:block;height:8px;border-radius:4px;background:var(--accent);text-decoration:none;opacity:.85}
+.hbars{display:flex;flex-direction:column;gap:8px}
+.hb{display:grid;grid-template-columns:96px 1fr 52px;gap:10px;align-items:center;font-size:14px}
+.hb .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .track{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}
+.hb .fill{height:100%;background:var(--bar-them);border-radius:6px}
+.hb.mine .tn{font-weight:700;color:var(--accent)}
+.hb.mine .fill{background:var(--accent)}
+.hb .v{text-align:right;font:700 16px/1 var(--display);font-variant-numeric:tabular-nums}
+.medal{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font:800 13px/1 var(--display);background:var(--bg);color:var(--muted)}
+.medal.m1{background:#f2c230;color:#1b1400}.medal.m2{background:#c9d1dc;color:#1b2333}.medal.m3{background:#d9a36a;color:#2a1600}
+.more{align-self:center}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">HC Vorpommern-Greifswald · weibliche Jugend</div>
+    <h1>Spieltag <span>kompakt</span></h1>
+  </header>
+
+  <div class="switch">
+    <div class="seg" role="tablist" aria-label="Ansicht">
+      <button id="tab-us" role="tab" aria-selected="true" data-view="us">Unsere Spiele</button>
+      <button id="tab-D" role="tab" aria-selected="false" data-view="D">D-Jugend</button>
+      <button id="tab-C" role="tab" aria-selected="false" data-view="C">C-Jugend</button>
+    </div>
+  </div>
+
+  <main id="view" class="wrap" style="gap:22px"></main>
+
+  <p class="note" id="stand"></p>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* ---------- Von Hand gepflegt ---------- */
+
+// Trainingszeiten: Uhrzeit eintragen, z. B. "17:00–18:30". Leer = "Uhrzeit folgt".
+const TRAINING = {
+  title: "Training ab den Herbstferien",
+  isNew: true,
+  hall: "16830",                       // Sporthalle 1 (Schönwalde I), Greifswald
+  place: "Halle 1, Greifswald",
+  days: [["Di","Dienstag",""],["Do","Donnerstag",""],["Fr","Freitag",""]]
+};
+
+const US = "HC Vorpommern-Greifswald";
+const HALLS = {
+ "8986":["Webasto Arena","Binsenwerderstr. 2, 17033 Neubrandenburg"],
+ "9108":["Vogelsanghalle","Grünhufer Bogen 18-20, 18437 Stralsund"],
+ "16830":["Sporthalle 1 Schönwalde I","Max-Planck-Straße 9, 17491 Greifswald"],
+ "16831":["Mehrzweckhalle Schönwalde II","Ernst-Thälmann-Ring 11, 17491 Greifswald"],
+ "16843":["Großsporthalle Wolgast","Hufelandstraße 9, 17438 Wolgast"],
+ "16844":["Mehrzweckhalle am Klosterberg","Am Klosterberg, 17087 Altentreptow"],
+ "16845":["Sporthalle Gerd Garber","Louis-Fürnberg-Straße, 18356 Barth"],
+ "16887":["Karsten-Sarnow-Halle","Arnold-Zweig-Straße 159, 18435 Stralsund"],
+ "16889":["Vineta Sportarena","Gewerbegebiet am Betonwerk, 18356 Barth"],
+ "16891":["Sporthalle Grimmen Süd-West","Leningrader Straße 24a, 18507 Grimmen"],
+ "16897":["Uecker-Sporthalle","Klosterstraße 52, 17309 Pasewalk"],
+ "16899":["Sporthalle am Tiefwarensee","Am Tiefwarensee, 17192 Waren (Müritz)"],
+ "16902":["Zweifelderhalle Stavenhagen","August-Seidel-Straße, 17153 Stavenhagen"],
+ "20169":["Sporthalle am Anger","Geschwister-Scholl-Straße 16/17, 17033 Neubrandenburg"],
+ "54549":["Mehrzweckhalle Volkshaus","Baustraße 50, 17389 Anklam"]
+};
+const SHORT = {
+ "HC Vorpommern-Greifswald":"HC VG","Stavenhagener SV von 1863":"Stavenhagen","HSV 90 Waren":"Waren",
+ "Pasewalker HV":"Pasewalk","SV Fort. 50 Neubrandenburg II":"Neubrandenburg II","HSV Grimmen 1992":"Grimmen",
+ "Stralsunder HV II":"Stralsund II","HV Altentreptow":"Altentreptow","SV Motor Barth":"Barth",
+ "Anklamer HV":"Anklam","Wolgaster HV 2000":"Wolgast","Platzhalter Endrundenspiele":"Gegner offen"
+};
+const LEN = {D:40, C:50};   // Spielzeit in Minuten
+
+/* ---------- Daten aus data.js ---------- */
+const DATA = window.HCVG_DATA;
+const view = document.getElementById("view");
+if(!DATA){ view.innerHTML='<div class="empty">Die Spieldaten (data.js) konnten nicht geladen werden.</div>'; throw new Error("data.js fehlt"); }
+const LEAGUES = DATA.leagues;
+
+const WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
+const MON=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sn = n => SHORT[n]||n;
+const hallName = l => l ? (HALLS[l]?.[0] || DATA.halls?.[l] || "Halle") : "Halle offen";
+const hallAddr = l => HALLS[l]?.[1] || "";
+const hallCity = l => { const a=hallAddr(l); return a ? a.split(", ").pop() : ""; };
+const mapsUrl = l => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(hallName(l)+(hallAddr(l)?", "+hallAddr(l):""));
+const liveUrl = g => "https://hbde-live.liga.nu/nuScoreLive/#/groups/"+g;
+const nuUrl = g => "https://hvmv-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?championship=BHV+Ost+26%2F27&group="+g;
+const ICON_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+const ICON_LIVE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4"/></svg>';
+const ICON_CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const fmt1 = n => (Math.round(n*10)/10).toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:1});
+const pct = (a,b) => b ? Math.round(a/b*100)+" %" : "–";
+
+function toGame(r,lg){
+  let [date,time,loc,home,away,res,note,mid,ref]=r;
+  if(time==="00:00" && !loc) time="";
+  let dt=null;
+  if(date){const [d,m,y]=date.split(".").map(Number);const [hh,mm]=(time||"00:00").split(":").map(Number);dt=new Date(y,m-1,d,hh,mm);}
+  return {dt,date,time,loc,home,away,res,note:note||"",mid,ref:ref||"",lg,mine:home===US||away===US};
+}
+const ALL = Object.entries(LEAGUES).flatMap(([k,L])=>L.games.map(r=>toGame(r,k)));
+const report = g => g.mid ? LEAGUES[g.lg].reports?.[g.mid] : null;
+
+function outcome(g){
+  if(!g.res||!g.mine) return "";
+  const [h,a]=g.res.split(":").map(Number);const us=g.home===US?h:a, th=g.home===US?a:h;
+  return us>th?"w":us<th?"l":"x";
+}
+function dLabel(g){
+  if(!g.dt) return `<div class="d">offen<small>Termin</small></div>`;
+  return `<div class="d">${WD[g.dt.getDay()]} ${g.dt.getDate()}. ${MON[g.dt.getMonth()]}<small>${g.time?g.time+" Uhr":"Zeit offen"}</small></div>`;
+}
+function teamHtml(n){return n===US?`<span class="usn">${esc(sn(n))}</span>`:esc(sn(n));}
+function hallLine(g){
+  const parts=[esc(hallName(g.loc))+(hallCity(g.loc)?", "+esc(hallCity(g.loc)):"")];
+  if(g.note) parts.push(esc(g.note));
+  if(!g.res && g.ref) parts.push("SR: "+esc(g.ref));
+  return parts.join(" · ");
+}
+function gameRow(g,{showLg=false}={}){
+  const o=outcome(g);
+  const head=`${dLabel(g)}<div class="mt"><div class="t">${showLg?`<span class="lg">${g.lg}</span> `:""}${teamHtml(g.home)} – ${teamHtml(g.away)}</div><div class="h">${hallLine(g)}</div></div>`;
+  if(g.res){
+    const right=`<div class="res ${o}">${esc(g.res)}${o?`<small>${o==="w"?"Sieg":o==="l"?"Niederlage":"Remis"}</small>`:""}</div>`;
+    return `<details class="gd"><summary class="g ${g.mine?"mine":""}">${head}${right}${ICON_CHEV}</summary>${gameDetail(g)}</details>`;
+  }
+  const right = g.loc
+    ? `<a class="mapbtn" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener" aria-label="Route zur ${esc(hallName(g.loc))} in Google Maps">${ICON_PIN}</a>`
+    : `<span></span>`;
+  return `<div class="g ${g.mine?"mine":""}">${head}${right}</div>`;
+}
+
+/* Spieldetails: Halbzeit, Schiris, Torschützinnen, Spielverlauf */
+let svgId=0;
+function momentum(r,len,persp){
+  const T=len*60, W=300, H=72; let d=0; const pts=[[0,0]];
+  for(const [s,side,c] of r.ev||[]){ if(c==="g"||c==="7g"){ d+= side===persp?1:-1; pts.push([Math.min(s,T),d]); } }
+  if(pts.length<2) return "";
+  const max=Math.max(3,...pts.map(p=>Math.abs(p[1])));
+  const x=s=>(s/T*W).toFixed(1), y=v=>(H/2 - v/max*(H/2-4)).toFixed(1);
+  let line=`M0 ${y(0)}`; for(const [s,v] of pts.slice(1)) line+=` H${x(s)} V${y(v)}`; line+=` H${W}`;
+  const area=line+` V${y(0)} H0 Z`; const id="m"+(++svgId);
+  return `<div class="mom"><div class="lbl"><span>Spielverlauf</span><span>Halbzeit</span><span>${len}'</span></div>
+  <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Verlauf der Tordifferenz">
+    <defs><clipPath id="${id}a"><rect x="0" y="0" width="${W}" height="${H/2}"/></clipPath><clipPath id="${id}b"><rect x="0" y="${H/2}" width="${W}" height="${H/2}"/></clipPath></defs>
+    <path d="${area}" clip-path="url(#${id}a)" fill="var(--win)" opacity=".22"/>
+    <path d="${area}" clip-path="url(#${id}b)" fill="var(--loss)" opacity=".22"/>
+    <line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+    <line x1="${W/2}" x2="${W/2}" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".6"/>
+    <path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  </svg>
+  <div class="lbl"><span>▲ Führung ${persp===1?"Heim":"Gast"}${""}</span><span>▼ Führung Gegner</span></div></div>`;
+}
+function scorerList(name,s){
+  const list=(s?.p||[]).filter(p=>p[3]>0).sort((a,b)=>b[3]-a[3]);
+  const items=list.map(p=>`<li><span>${esc(p[1])}${p[5]?` <span class="note">(7m ${p[4]}/${p[5]})</span>`:""}</span><span>${p[3]}</span></li>`).join("")||'<li class="note">keine Angaben</li>';
+  const tt=s?`7m ${s.g7}/${s.s7} · Gelb ${s.y} · 2-Min ${s.m2}${s.d?` · Disq. ${s.d}`:""} · Auszeiten ${s.to}`:"";
+  return `<div><h4>${teamHtml(name)}</h4><ul>${items}</ul><div class="tt">${tt}</div></div>`;
+}
+function gameDetail(g){
+  const r=report(g);
+  if(!r) return `<div class="gx"><span class="note">Für dieses Spiel gibt es noch keinen Spielbericht.</span></div>`;
+  const persp = g.mine ? (g.home===US?1:2) : 1;
+  const meta=[];
+  if(r.ht) meta.push(`Halbzeit <b>${esc(r.ht)}</b>`);
+  meta.push(`Schiedsrichter <b>${r.sr?.length?esc(r.sr.join(", ")):"–"}</b>`);
+  let mom=momentum(r,LEN[g.lg],persp);
+  if(mom && g.mine) mom=mom.replace(`▲ Führung ${persp===1?"Heim":"Gast"}`,"▲ Führung HC VG");
+  else if(mom) mom=mom.replace("▲ Führung Heim","▲ Führung "+esc(sn(g.home))).replace("▼ Führung Gegner","▼ Führung "+esc(sn(g.away)));
+  return `<div class="gx"><div class="meta"><span>${meta.join("</span><span>")}</span></div>${mom}<div class="sc">${scorerList(g.home,r.h)}${scorerList(g.away,r.a)}</div></div>`;
+}
+
+function countdown(dt){
+  const now=new Date();const days=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+  if(days<=0) return "Heute";
+  if(days===1) return "Morgen";
+  return `in ${days} Tagen`;
+}
+const now=()=>new Date();
+const upcoming = list => list.filter(g=>!g.res && (!g.dt || g.dt.getTime()+2*3600e3>now().getTime())).sort((a,b)=>(a.dt?a.dt:Infinity)-(b.dt?b.dt:Infinity));
+const played = list => list.filter(g=>g.res).sort((a,b)=>b.dt-a.dt);
+
+/* ---------- Statistik berechnen ---------- */
+const statCache={};
+function leagueStats(k){
+  if(statCache[k]) return statCache[k];
+  const L=LEAGUES[k], nb=Math.ceil(LEN[k]/10);
+  const teams={}, players={};
+  const T=n=>teams[n]||(teams[n]={name:n,gp:0,w:0,x:0,l:0,gf:0,ga:0,s7:0,g7:0,y:0,m2:0,d:0,to:0,rg:0,htLead:0,htGp:0,b:Array(nb).fill(0),bA:Array(nb).fill(0),best:null});
+  for(const g of ALL.filter(g=>g.lg===k&&g.res)){
+    const [hg,ag]=g.res.split(":").map(Number);
+    const H=T(g.home), A=T(g.away);
+    H.gp++;A.gp++;H.gf+=hg;H.ga+=ag;A.gf+=ag;A.ga+=hg;
+    if(hg>ag){H.w++;A.l++;}else if(hg<ag){A.w++;H.l++;}else{H.x++;A.x++;}
+    for(const [t,o,diff] of [[H,A,hg-ag],[A,H,ag-hg]]) if(diff>0 && (!t.best||diff>t.best.diff)) t.best={diff,g,vs:o.name};
+    const r=report(g); if(!r) continue;
+    for(const [side,t,name] of [["h",H,g.home],["a",A,g.away]]){
+      const s=r[side]; if(!s) continue;
+      t.rg++; t.s7+=s.s7; t.g7+=s.g7; t.y+=s.y; t.m2+=s.m2; t.d+=s.d; t.to+=s.to;
+      for(const p of s.p||[]){
+        const key=p[2]||name+"|"+p[1];
+        const pl=players[key]||(players[key]={name:p[1],team:name,gp:0,g:0,g7:0,a7:0,m2:0,d:0});
+        pl.gp++;pl.g+=p[3];pl.g7+=p[4];pl.a7+=p[5];pl.m2+=p[7];pl.d+=p[8];
+      }
+    }
+    if(r.ht){const [a,b]=r.ht.split(":").map(Number);H.htGp++;A.htGp++;if(a>b)H.htLead++;else if(b>a)A.htLead++;}
+    for(const [s,side,c] of r.ev||[]){
+      if(c!=="g"&&c!=="7g") continue;
+      const i=Math.min(nb-1,Math.floor(Math.max(0,s-1)/600));
+      if(side===1){H.b[i]++;A.bA[i]++;} else if(side===2){A.b[i]++;H.bA[i]++;}
+    }
+  }
+  return statCache[k]={teams,players:Object.values(players),nb};
+}
+
+/* ---------- Ansichten ---------- */
+function trainingTile(){
+  const t=TRAINING;
+  return `<section class="train" aria-label="Trainingszeiten">
+    <div class="top"><h2>${esc(t.title)}</h2>${t.isNew?'<span class="new">Neu</span>':""}</div>
+    <div class="days">${t.days.map(([a,full,time])=>`<div class="day" title="${esc(full)}"><b>${esc(a)}</b><span class="${time?"set":""}">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span></div>`).join("")}</div>
+    <div class="where"><span><b>${esc(t.place)}</b><br><span class="note">${esc(hallName(t.hall))} · ${esc(hallAddr(t.hall))}</span></span>
+    <a class="btn line" href="${mapsUrl(t.hall)}" target="_blank" rel="noopener">${ICON_PIN} Route</a></div>
+  </section>`;
+}
+
+function viewUs(){
+  const up = upcoming(ALL.filter(g=>g.mine)).filter(g=>g.dt);
+  const next = up[0];
+  let html="";
+  if(next){
+    html+=`<section class="board" aria-label="Nächstes Spiel">
+      <div class="when"><span class="date"><span class="lg">${next.lg}-Jugend</span>&nbsp; ${WD[next.dt.getDay()]}, ${next.dt.getDate()}. ${MON[next.dt.getMonth()]} · ${next.time||"Zeit offen"}${next.time?" Uhr":""}</span><span class="count">${countdown(next.dt)}</span></div>
+      <div class="match"><div class="team ${next.home===US?"us":""}">${esc(sn(next.home))}</div><div class="vs">VS</div><div class="team away ${next.away===US?"us":""}">${esc(sn(next.away))}</div></div>
+      <div class="hall"><b>${esc(hallName(next.loc))}</b>${esc(hallAddr(next.loc))}${next.ref?`<br>Schiedsrichter: ${esc(next.ref)}`:""}</div>
+      <div class="row">${next.loc?`<a class="btn primary" href="${mapsUrl(next.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route in Google Maps</a>`:""}<button class="btn ghost" data-go="${next.lg}:live">${ICON_LIVE} Live-Ticker</button></div>
+    </section>`;
+  }
+  html+=trainingTile();
+  html+=`<section class="sec"><div class="sechead"><h2>Nächste Spiele</h2></div><div class="list">${up.slice(next?1:0,9).map(g=>gameRow(g,{showLg:true})).join("")||'<div class="empty">Keine weiteren Termine eingetragen.</div>'}</div></section>`;
+  const res = played(ALL.filter(g=>g.mine)).slice(0,6);
+  html+=`<section class="sec"><div class="sechead"><h2>Letzte Ergebnisse</h2><span class="note">Antippen für Details</span></div><div class="list">${res.map(g=>gameRow(g,{showLg:true})).join("")}</div></section>`;
+  const locs=[...new Set(up.map(g=>g.loc).filter(Boolean))];
+  html+=`<section class="sec"><h2>Unsere Hallen</h2><p class="note" style="margin:0">Alle Hallen, in denen die Mädels in dieser Saison noch spielen.</p><div class="halls">${locs.map(l=>`<div class="hc"><div class="nm">${esc(hallName(l))}</div><div class="ad">${esc(hallAddr(l))}</div><a class="btn line" href="${mapsUrl(l)}" target="_blank" rel="noopener">${ICON_PIN} In Google Maps öffnen</a></div>`).join("")}</div></section>`;
+  return html;
+}
+
+const st = { filterMine:{D:false,C:false}, sub:{D:"spiele",C:"spiele"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, cmp:{D:"gf",C:"gf"} };
+try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["spiele","stat","live"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
+
+function subNav(k){
+  const b=(id,label,extra="")=>`<button role="tab" data-sub="${id}" aria-selected="${st.sub[k]===id}">${extra}${label}</button>`;
+  return `<div class="sub" role="tablist" aria-label="Bereich">${b("spiele","Spiele")}${b("stat","Statistik")}${b("live","Live",'<span class="ld" aria-hidden="true"></span>')}</div>`;
+}
+
+function viewLeague(k){
+  const sub=st.sub[k];
+  return subNav(k) + (sub==="stat"?viewStats(k):sub==="live"?viewLive(k):viewGames(k));
+}
+
+function viewGames(k){
+  const L=LEAGUES[k];
+  const games=ALL.filter(g=>g.lg===k&&(!st.filterMine[k]||g.mine));
+  const t=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Mannschaft</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>+/-</th><th>Pkt</th></tr></thead><tbody>${
+    L.table.map((r,i)=>`<tr class="${r[0]===US?"mine":""}"><td>${i+1}</td><td>${esc(sn(r[0]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${esc(r[5])}</td><td>${r[6]>0?"+":""}${r[6]}</td><td class="pts">${esc(r[7])}</td></tr>`).join("")}</tbody></table></div>`;
+  return `
+  <section class="sec"><div class="sechead"><h2>Tabelle</h2><a class="note" href="${nuUrl(L.group)}" target="_blank" rel="noopener" style="color:var(--muted)">auf nuLiga</a></div>${t}</section>
+  <section class="sec"><div class="sechead"><h2>Kommende Spiele</h2>
+    <div class="chips" role="group" aria-label="Filter"><button class="chip" aria-pressed="${!st.filterMine[k]}" data-f="all">Alle</button><button class="chip" aria-pressed="${st.filterMine[k]}" data-f="us">Nur HC VG</button></div></div>
+    <div class="list">${upcoming(games).map(g=>gameRow(g)).join("")||'<div class="empty">Keine Spiele.</div>'}</div></section>
+  <section class="sec"><div class="sechead"><h2>Ergebnisse</h2><span class="note">Antippen für Details</span></div><div class="list">${played(games).map(g=>gameRow(g)).join("")||'<div class="empty">Noch keine Ergebnisse.</div>'}</div></section>`;
+}
+
+function viewLive(k){
+  const L=LEAGUES[k];
+  return `<section class="sec">
+    <div class="sechead"><h2>Live-Ticker</h2><a class="btn line" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Groß öffnen</a></div>
+    <div class="livebox"><iframe src="${liveUrl(L.group)}" title="Live-Ticker ${esc(L.name)}" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+    <p class="note" style="margin:0">Live-Spielstände von nuScore. Läuft nur, wenn der Heimverein das Spiel live erfasst – bei Jugendspielen ist das nicht immer der Fall. Falls hier nichts erscheint: „Groß öffnen“.</p>
+  </section>`;
+}
+
+function viewStats(k){
+  const L=LEAGUES[k], S=leagueStats(k), me=S.teams[US];
+  if(!me) return `<div class="empty">Noch keine Spiele gespielt.</div>`;
+  const rank=L.table.findIndex(r=>r[0]===US)+1;
+  const row=L.table.find(r=>r[0]===US);
+  const best=me.best;
+
+  // Kennzahlen
+  let html=`<section class="sec"><h2>HC VG in Zahlen</h2><div class="kpis">
+    <div class="kpi hero"><b>${rank}.</b><span>Platz · ${esc(row?.[7]||"")} Punkte</span></div>
+    <div class="kpi"><b>${me.w}-${me.x}-${me.l}</b><span>Siege · Remis · Niederlagen</span></div>
+    <div class="kpi"><b>${fmt1(me.gf/me.gp)}</b><span>Tore pro Spiel</span></div>
+    <div class="kpi"><b>${fmt1(me.ga/me.gp)}</b><span>Gegentore pro Spiel</span></div>
+    <div class="kpi"><b>${pct(me.g7,me.s7)}</b><span>7-Meter verwandelt (${me.g7}/${me.s7})</span></div>
+    <div class="kpi"><b>${me.htLead}/${me.htGp}</b><span>zur Halbzeit vorn</span></div>
+    <div class="kpi"><b>${me.y}</b><span>Gelbe Karten</span></div>
+    <div class="kpi"><b>${me.m2}</b><span>2-Minuten-Strafen</span></div>
+    <div class="kpi"><b>${best?"+"+best.diff:"–"}</b><span>${best?"höchster Sieg ("+esc(sn(best.vs))+")":"höchster Sieg"}</span></div>
+  </div></section>`;
+
+  // Tore nach Spielabschnitt
+  const mx=Math.max(1,...me.b,...me.bA);
+  html+=`<section class="sec"><h2>Wann fallen die Tore?</h2><div class="card">
+    <div class="legend"><span><i style="background:var(--accent)"></i>Tore HC VG</span><span><i style="background:var(--bar-them)"></i>Gegentore</span></div>
+    <div class="cols">${me.b.map((v,i)=>`<div class="col"><div class="pair">
+      <div class="bar us" style="height:${v/mx*100}%"><i>${v}</i></div><div class="bar them" style="height:${me.bA[i]/mx*100}%"><i>${me.bA[i]}</i></div>
+      </div><small>${i*10}.–${Math.min((i+1)*10,LEN[k])}.</small></div>`).join("")}</div>
+    <span class="note">Summe aller Spiele mit Spielbericht, in 10-Minuten-Abschnitten.</span>
+  </div></section>`;
+
+  // Unsere Spielerinnen
+  const sorters={g:(a,b)=>b.g-a.g||a.gp-b.gp, avg:(a,b)=>b.g/b.gp-a.g/a.gp||b.g-a.g, g7:(a,b)=>b.g7-a.g7||b.a7-a.a7, gp:(a,b)=>b.gp-a.gp||b.g-a.g};
+  const ours=S.players.filter(p=>p.team===US).sort(sorters[st.sort[k]]);
+  const gmax=Math.max(1,...ours.map(p=>p.g));
+  const anyM2=ours.some(p=>p.m2>0);
+  const sc=(id,l)=>`<button class="chip" data-sort="${id}" aria-pressed="${st.sort[k]===id}">${l}</button>`;
+  html+=`<section class="sec"><div class="sechead"><h2>Unsere Spielerinnen</h2><div class="chips" role="group" aria-label="Sortieren">${sc("g","Tore")}${sc("avg","Ø")}${sc("g7","7m")}${sc("gp","Spiele")}</div></div>
+    <div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Sp</th><th>Tore</th><th>Ø</th><th>7m</th>${anyM2?"<th>2'</th>":""}</tr></thead><tbody>${
+      ours.map((p,i)=>`<tr><td>${i+1}</td><td class="nm">${esc(p.name)}</td><td>${p.gp}</td><td><div class="gbar"><s style="width:${Math.round(p.g/gmax*44)}px"></s><b>${p.g}</b></div></td><td>${fmt1(p.g/p.gp)}</td><td>${p.a7?p.g7+"/"+p.a7:"–"}</td>${anyM2?`<td>${p.m2||"–"}</td>`:""}</tr>`).join("")
+    }</tbody></table></div>
+    <p class="note" style="margin:0">Sp = im Spielberichtsbogen eingetragen. Gelbe Karten und Zeitstrafen werden bei Jugendspielen anonym erfasst und stehen deshalb nur in der Mannschaftsstatistik.</p>
+  </section>`;
+
+  // Torschützinnen der Liga
+  const top=[...S.players].filter(p=>p.g>0).sort(sorters.g);
+  const shown=st.topAll[k]?top:top.slice(0,10);
+  html+=`<section class="sec"><div class="sechead"><h2>Torschützinnen der Liga</h2><span class="note">${top.length} Spielerinnen mit Toren</span></div>
+    <div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Tore</th><th>Sp</th><th>Ø</th></tr></thead><tbody>${
+      shown.map((p,i)=>{const r=top.findIndex(q=>q.g===p.g)+1;return `<tr class="${p.team===US?"mine":""}"><td>${r<=3?`<span class="medal m${r}">${r}</span>`:r}</td><td class="nm">${esc(p.name)}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${p.g}</td><td>${p.gp}</td><td>${fmt1(p.g/p.gp)}</td></tr>`;}).join("")
+    }</tbody></table></div>
+    ${top.length>10?`<button class="chip more" data-top="1" aria-pressed="${st.topAll[k]}">${st.topAll[k]?"Nur Top 10":"Alle "+top.length+" anzeigen"}</button>`:""}
+  </section>`;
+
+  // Ligavergleich
+  const metrics={
+    gf:["Tore/Spiel",t=>t.gf/t.gp,v=>fmt1(v),false],
+    ga:["Gegentore/Spiel",t=>t.ga/t.gp,v=>fmt1(v),true],
+    q7:["7m-Quote",t=>t.s7?t.g7/t.s7:0,v=>Math.round(v*100)+"%",false],
+    pen:["Strafen/Spiel",t=>t.rg?(t.y+t.m2+t.d)/t.rg:0,v=>fmt1(v),true]
+  };
+  const [mLabel,mFn,mFmt,lowGood]=metrics[st.cmp[k]];
+  const rows=Object.values(S.teams).filter(t=>t.gp).map(t=>({t,v:mFn(t)})).sort((a,b)=>lowGood?a.v-b.v:b.v-a.v);
+  const vmax=Math.max(0.0001,...rows.map(r=>r.v));
+  const mc=(id)=>`<button class="chip" data-cmp="${id}" aria-pressed="${st.cmp[k]===id}">${metrics[id][0]}</button>`;
+  html+=`<section class="sec"><h2>Ligavergleich</h2><div class="chips" role="group" aria-label="Kennzahl">${mc("gf")}${mc("ga")}${mc("q7")}${mc("pen")}</div>
+    <div class="card"><div class="hbars">${rows.map(({t,v})=>`<div class="hb ${t.name===US?"mine":""}"><span class="tn">${esc(sn(t.name))}</span><div class="track"><div class="fill" style="width:${Math.max(2,v/vmax*100)}%"></div></div><span class="v">${mFmt(v)}</span></div>`).join("")}</div>
+    <span class="note">${lowGood?"Weniger ist besser – sortiert vom besten Wert.":"Sortiert vom besten Wert."}${st.cmp[k]==="pen"?" Strafen = gelbe Karten + 2-Minuten + Disqualifikationen.":""}</span></div>
+  </section>`;
+
+  // Schiedsrichter bei unseren Spielen
+  const ourGames=ALL.filter(g=>g.lg===k&&g.mine&&(g.res||g.ref)).sort((a,b)=>(a.dt||Infinity)-(b.dt||Infinity));
+  html+=`<section class="sec"><h2>Schiris bei unseren Spielen</h2><div class="list">${ourGames.map(g=>{
+      const r=report(g); const who=g.res?(r?.sr?.join(", ")||"–"):g.ref; const opp=g.home===US?g.away:g.home;
+      return `<div class="g"><div class="d">${g.dt?`${g.dt.getDate()}. ${MON[g.dt.getMonth()]}`:"offen"}<small>${g.res?esc(g.res):"angesetzt"}</small></div><div class="mt"><div class="t">${g.home===US?"vs":"bei"} ${esc(sn(opp))}</div><div class="h">${esc(who)}</div></div><span></span></div>`;
+    }).join("")||'<div class="empty">Noch keine Angaben.</div>'}</div></section>`;
+
+  html+=`<p class="note" style="margin:0">Alle Werte aus den genehmigten Spielberichten auf nuLiga. Namen sind zum Schutz der Kinder gekürzt.</p>`;
+  return html;
+}
+
+/* ---------- Steuerung ---------- */
+let current="us";
+try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C"].includes(s))current=s;}catch(e){}
+function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
+function render(){
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
+  view.innerHTML = current==="us"?viewUs():viewLeague(current);
+  document.getElementById("stand").textContent=`Datenstand: ${DATA.updated} · Quelle: nuLiga HVMV (BHV Ost 2026/27). Ohne Gewähr – kurzfristige Verlegungen bitte beim Trainer erfragen.`;
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();render();window.scrollTo({top:0});}));
+view.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const k=current;
+  if(b.dataset.go){const [lg,sub]=b.dataset.go.split(":");current=lg;st.sub[lg]=sub;save();render();window.scrollTo({top:0});return;}
+  if(b.dataset.sub){st.sub[k]=b.dataset.sub;save();render();return;}
+  if(b.dataset.f){st.filterMine[k]=b.dataset.f==="us";render();return;}
+  if(b.dataset.sort){st.sort[k]=b.dataset.sort;render();return;}
+  if(b.dataset.top){st.topAll[k]=!st.topAll[k];render();return;}
+  if(b.dataset.cmp){st.cmp[k]=b.dataset.cmp;render();return;}
+});
+render();
+</script>
