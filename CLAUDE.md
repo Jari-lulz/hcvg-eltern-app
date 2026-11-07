@@ -26,7 +26,12 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Tabelle: `.../groupPage?championship=BHV+Ost+26%2F27&group=<id>`
 - Gesamtspielplan: `...&displayTyp=vorrunde&displayDetail=meetings`
 - Spielbericht: `.../groupMeetingReport?meeting=<id>&championship=...&group=<id>`
-- Live-Ticker: `https://hbde-live.liga.nu/nuScoreLive/#/groups/<id>`. Wird per iframe eingebettet. Die REST-API (`/nuScoreLiveRestBackend/api/1/`) erlaubt keinen Zugriff von fremden Seiten (CORS).
+- Live-Ticker: `https://hbde-live.liga.nu/nuScoreLive/#/groups/<id>`. Wird nur verlinkt (öffnet in neuem Tab), nicht eingebettet. Die REST-API (`/nuScoreLiveRestBackend/api/1/`) erlaubt keinen Zugriff von fremden Seiten (CORS).
+- handball.net (geprüft 11/2026): Vereinsseite `/club/0e22k3j` zeigt keine Teams, die API (`/api/new/...`) antwortet mit 403. Keine zusätzlichen Daten.
+
+## Startseite
+- Nur: nächstes Spiel C-Jugend, nächstes Spiel D-Jugend (Treff = 1 Stunde vor Anwurf, Countdown, Route, Live-Ticker-Link) und die Trainingszeiten (ohne Adresse/Route, die Halle kennen alle).
+- Ergebnisse, Tabellen und Statistik stehen in den Reitern D-Jugend und C-Jugend.
 - Gelbe Karten und Zeitstrafen sind bei Jugendspielen anonym, also nur pro Mannschaft verfügbar.
 
 ## Design
