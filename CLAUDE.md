@@ -45,5 +45,4 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Mobil zuerst: muss bei ~375px Breite sauber aussehen.
 
 ## Ideen für später
-- Trainings-Uhrzeiten eintragen (kommen vom Trainer)
 - Torjubel-Animation mit Comic-Avataren statt echter Kinderfotos (DSGVO)

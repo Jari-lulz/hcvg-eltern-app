@@ -100,11 +100,13 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .train{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tape);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .train .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .train .new{font:700 12px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--loss);color:#fff;padding:5px 7px;border-radius:5px}
-.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.day{background:var(--bg);border-radius:10px;padding:10px 8px;text-align:center}
-.day b{display:block;font:800 22px/1 var(--display);text-transform:uppercase;color:var(--accent)}
-.day span{font-size:13px;color:var(--muted)}
-.day span.set{color:var(--ink);font-weight:600}
+.days{display:flex;flex-direction:column;gap:8px}
+.day{background:var(--bg);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:44px 1fr auto;grid-template-areas:"d n w" "d t w";align-items:center;gap:0 10px}
+.day b{grid-area:d;font:800 26px/1 var(--display);text-transform:uppercase;color:var(--accent)}
+.day .dn{grid-area:n;font-size:13px;color:var(--muted)}
+.day .tm{grid-area:t;font:700 20px/1.15 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.day .who{grid-area:w;font:700 13px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.day .who.both{background:var(--tape);color:var(--tape-ink);border-color:var(--tape)}
 .train .where{font-size:15px}
 
 /* lists */
@@ -228,12 +230,16 @@ tr.mine td:first-child{color:var(--ink)}
 <script>
 /* ---------- Von Hand gepflegt ---------- */
 
-// Trainingszeiten: Uhrzeit eintragen, z. B. "17:00–18:30". Leer = "Uhrzeit folgt".
+// Trainingszeiten: [Kurz, Tag, Uhrzeit, Jugend]. Jugend "C", "D" oder "CD" (= gemeinsam).
 const TRAINING = {
   title: "Training ab den Herbstferien",
   isNew: true,
   place: "Halle 1, Greifswald",
-  days: [["Di","Dienstag",""],["Do","Donnerstag",""],["Fr","Freitag",""]]
+  days: [
+    ["Di","Dienstag","18:00–19:00","C"],
+    ["Do","Donnerstag","17:30–19:00","D"],
+    ["Fr","Freitag","16:45–18:00","CD"]
+  ]
 };
 
 const US = "HC Vorpommern-Greifswald";
@@ -412,7 +418,10 @@ function trainingTile(){
   const t=TRAINING;
   return `<section class="train" aria-label="Trainingszeiten">
     <div class="top"><h2>${esc(t.title)}</h2>${t.isNew?'<span class="new">Neu</span>':""}</div>
-    <div class="days">${t.days.map(([a,full,time])=>`<div class="day" title="${esc(full)}"><b>${esc(a)}</b><span class="${time?"set":""}">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span></div>`).join("")}</div>
+    <div class="days">${t.days.map(([a,full,time,who])=>`<div class="day">
+      <b>${esc(a)}</b><span class="dn">${esc(full)}${who==="CD"?" · beide zusammen":""}</span>
+      <span class="tm">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span>
+      <span class="who ${who==="CD"?"both":""}">${who==="CD"?"C + D":esc(who)+"-Jugend"}</span></div>`).join("")}</div>
     <div class="where"><b>${esc(t.place)}</b></div>
   </section>`;
 }
