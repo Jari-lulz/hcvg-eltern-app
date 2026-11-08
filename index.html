@@ -39,9 +39,9 @@ header{padding-top:18px;display:flex;align-items:center;gap:12px}
 header .ht{display:flex;flex-direction:column;gap:4px;min-width:0}
 header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
-.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/10;max-width:100%;background:var(--court)}
+figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/10;max-width:100%;background:var(--court)}
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
+figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
 .hero .cap b{font:800 clamp(18px,6.4vw,32px)/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .hero .cap b i,.hero .cap b em{font-style:normal;display:inline-block}
