@@ -297,6 +297,15 @@ td:first-child{font:800 18px/1 var(--display);text-align:center;color:var(--mute
 td.pts{font:800 18px/1 var(--display)}
 tr.mine td{background:var(--us);font-weight:700}
 tr.mine td:first-child{color:var(--ink)}
+/* Ligatabelle: passt ohne Wischen aufs Handy */
+table.lt{table-layout:auto}
+table.lt th,table.lt td{padding:9px 3px;font-size:14px}
+table.lt th{font-size:10px;letter-spacing:.04em}
+table.lt td:first-child{width:22px;font-size:15px;padding-left:6px}
+table.lt td:nth-child(2){font-size:14px;line-height:1.2;padding-right:4px}
+table.lt td.pts{font-size:17px;padding-right:8px}
+table.lt th:last-child{padding-right:8px}
+@media (max-width:360px){table.lt td{font-size:13px} table.lt td:nth-child(7){font-size:12px}}
 .sec{display:flex;flex-direction:column;gap:10px}
 .sechead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -580,9 +589,9 @@ function trainingTile(){
   return `<section class="train" aria-label="Trainingszeiten">
     <div class="top"><h2>${esc(t.title)}</h2>${t.isNew?'<span class="new">Neu</span>':""}</div>
     <div class="days">${t.days.map(([a,full,time,who])=>`<div class="day">
-      <b>${esc(a)}</b><span class="dn">${esc(full)}${who==="CD"?" · beide zusammen":""}</span>
+      <b>${esc(a)}</b><span class="dn">${esc(full)}</span>
       <span class="tm">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span>
-      <span class="who ${who==="CD"?"both":""}">${who==="CD"?"C + D":esc(who)+"-Jugend"}</span></div>`).join("")}</div>
+      <span class="who">${who==="CD"?"C+D-Jugend":esc(who)+"-Jugend"}</span></div>`).join("")}</div>
     <div class="where"><span><b>${esc(t.place)}</b><br><span class="note">${esc(hallName(t.hall))} · ${esc(hallAddr(t.hall))}</span></span>
       <a class="btn line" href="${mapsUrl(t.hall)}" target="_blank" rel="noopener">${ICON_PIN} Google Maps</a></div>
   </section>`;
@@ -743,7 +752,7 @@ function viewResults(k){
 }
 function viewTable(k){
   const L=LEAGUES[k];
-  const t=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Mannschaft</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>+/-</th><th>Pkt</th></tr></thead><tbody>${
+  const t=`<div class="tbl-wrap"><table class="lt"><thead><tr><th>#</th><th>Mannschaft</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>+/-</th><th>Pkt</th></tr></thead><tbody>${
     L.table.map((r,i)=>`<tr class="${r[0]===US?"mine":""}"><td>${i+1}</td><td>${esc(sn(r[0]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${esc(r[5])}</td><td>${r[6]>0?"+":""}${r[6]}</td><td class="pts">${esc(r[7])}</td></tr>`).join("")}</tbody></table></div>`;
   return `<section class="sec"><div class="sechead"><h2>Tabelle</h2><a class="note" href="${nuUrl(L.group)}" target="_blank" rel="noopener" style="color:var(--muted)">auf nuLiga</a></div>${t}</section>`;
 }
