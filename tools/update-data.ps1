@@ -328,6 +328,43 @@ foreach ($key in $out.leagues.Keys) {
   }
 }
 
+# Trainings als woechentliche Serientermine (aus tools/training.json)
+$Training = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'training.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json
+$out.training = $Training
+$tEvents = @{ D = @(); C = @(); CD = @() }
+$byDay = @{ Mo = 'MO'; Di = 'TU'; Mi = 'WE'; Do = 'TH'; Fr = 'FR'; Sa = 'SA'; So = 'SU' }
+$dowNum = @{ Mo = 1; Di = 2; Mi = 3; Do = 4; Fr = 5; Sa = 6; So = 0 }
+$tFrom = [datetime]::ParseExact($Training.from, 'yyyy-MM-dd', $null)
+$tUntil = [datetime]::ParseExact($Training.until, 'yyyy-MM-dd', $null)
+$tWhere = ''
+if ($Training.hall -and $HallInfo.($Training.hall)) { $tWhere = ($HallInfo.($Training.hall)[0] + ', ' + $HallInfo.($Training.hall)[1]) }
+$tMaps = if ($tWhere) { 'https://www.google.com/maps/dir/?api=1&destination=' + [uri]::EscapeDataString($tWhere) } else { '' }
+foreach ($day in $Training.days) {
+  $short, $full, $times, $who = $day[0], $day[1], $day[2], $day[3]
+  if ($times -notmatch '(\d{1,2}:\d{2})\D+(\d{1,2}:\d{2})') { continue }
+  $t1 = $Matches[1]; $t2 = $Matches[2]
+  $first = $tFrom; while ([int]$first.DayOfWeek -ne $dowNum[$short]) { $first = $first.AddDays(1) }
+  $s = $first.Add([timespan]::Parse($t1)); $e = $first.Add([timespan]::Parse($t2))
+  $label = if ($who -eq 'CD') { 'D- und C-Jugend (gemeinsam)' } else { "$who-Jugend" }
+  $desc = @("Training $label", "$full $t1 - $t2 Uhr", "Ort: $($Training.place)")
+  if ($tWhere) { $desc += "Halle: $tWhere" }
+  if ($tMaps) { $desc += "Route: $tMaps" }
+  $desc += "Alle Infos: $AppUrl"
+  $lines = @('BEGIN:VEVENT', "UID:training-$short-$who@hcvg-eltern-app", "DTSTAMP:$stamp",
+    "DTSTART;TZID=Europe/Berlin:$($s.ToString("yyyyMMdd'T'HHmmss"))",
+    "DTEND;TZID=Europe/Berlin:$($e.ToString("yyyyMMdd'T'HHmmss"))",
+    "RRULE:FREQ=WEEKLY;BYDAY=$($byDay[$short]);UNTIL=$($tUntil.ToString('yyyyMMdd'))T225959Z",
+    "SUMMARY:$(IcsText "Training $label")")
+  if ($tWhere) { $lines += "LOCATION:$(IcsText $tWhere)" }
+  $lines += "DESCRIPTION:$(IcsText ($desc -join "`n"))"
+  if ($tMaps) { $lines += "URL:$tMaps" }
+  $lines += 'END:VEVENT'
+  $ev = ($lines | ForEach-Object { IcsFold $_ }) -join "`r`n"
+  $tEvents['CD'] += , $ev
+  if ($who -match 'C') { $tEvents['C'] += , $ev }
+  if ($who -match 'D') { $tEvents['D'] += , $ev }
+}
+
 $tz = @('BEGIN:VTIMEZONE', 'TZID:Europe/Berlin',
   'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
   'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
@@ -338,10 +375,10 @@ function Write-Ics([string]$file, [string]$name, $evs) {
   $body = @($head, $tz) + $evs + @('END:VCALENDAR')
   [IO.File]::WriteAllText((Join-Path $Root $file), (($body -join "`r`n") + "`r`n"), (New-Object Text.UTF8Encoding $false))
 }
-Write-Ics 'kalender-c.ics' 'HC VG C-Jugend' $events['C']
-Write-Ics 'kalender-d.ics' 'HC VG D-Jugend' $events['D']
-Write-Ics 'kalender.ics'   'HC VG D- und C-Jugend' ($events['D'] + $events['C'])
-Write-Host "Kalender: C $($events['C'].Count), D $($events['D'].Count) Termine"
+Write-Ics 'kalender-c.ics' 'HC VG C-Jugend' ($events['C'] + $tEvents['C'])
+Write-Ics 'kalender-d.ics' 'HC VG D-Jugend' ($events['D'] + $tEvents['D'])
+Write-Ics 'kalender.ics'   'HC VG D- und C-Jugend' ($events['D'] + $events['C'] + $tEvents['CD'])
+Write-Host "Kalender: C $($events['C'].Count), D $($events['D'].Count) Spiele, $($tEvents['CD'].Count) Trainingsserien"
 
 $json = ConvertTo-Json -InputObject $out -Depth 10 -Compress
 # Berichte als fertiges JSON einsetzen (vermeidet doppeltes Umwandeln)

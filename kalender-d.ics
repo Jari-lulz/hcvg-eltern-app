@@ -26,7 +26,7 @@ END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:D-HSVGrimmen1992-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20260912T104500
 DTEND;TZID=Europe/Berlin:20260912T130500
 SUMMARY:D-Jugend: HSV Grimmen 1992 - HC VG (7:22)
@@ -44,7 +44,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%20Grimm
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-PasewalkerHV-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20260927T093000
 DTEND;TZID=Europe/Berlin:20260927T115000
 SUMMARY:D-Jugend: HC VG - Pasewalker HV (23:15)
@@ -61,7 +61,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-StralsunderHVII-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261011T150000
 DTEND;TZID=Europe/Berlin:20261011T172000
 SUMMARY:D-Jugend: Stralsunder HV II - HC VG (13:30)
@@ -76,7 +76,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Karsten-Sarnow-Hal
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-StavenhagenerSVvon1863-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261115T130000
 DTEND;TZID=Europe/Berlin:20261115T152000
 SUMMARY:D-Jugend: HC VG - Stavenhagener SV von 1863
@@ -93,7 +93,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HSV90Waren-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261121T110000
 DTEND;TZID=Europe/Berlin:20261121T132000
 SUMMARY:D-Jugend: HSV 90 Waren - HC VG
@@ -102,15 +102,14 @@ LOCATION:Sporthalle am Tiefwarensee\, Am Tiefwarensee\, 17192 Waren (Müri
 DESCRIPTION:Auswärtsspiel\nTreff: 11:00 Uhr\nAnwurf: 12:00 Uhr\nHalle: Sp
  orthalle am Tiefwarensee\, Am Tiefwarensee\, 17192 Waren (Müritz)\nRoute:
   https://www.google.com/maps/dir/?api=1&destination=Sporthalle%20am%20Tie
- fwarensee%2C%20Am%20Tiefwarensee%2C%2017192%20Waren%20%28M%C3%BCritz%29\n
- Alle Infos: https://jari-lulz.github.io/hcvg-eltern-app/
+ fwarensee%2C%20Am%20Tiefwarensee%2C%2017192%20Waren%20(M%C3%BCritz)\nAlle
+  Infos: https://jari-lulz.github.io/hcvg-eltern-app/
 URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%20am%20
- Tiefwarensee%2C%20Am%20Tiefwarensee%2C%2017192%20Waren%20%28M%C3%BCritz%2
- 9
+ Tiefwarensee%2C%20Am%20Tiefwarensee%2C%2017192%20Waren%20(M%C3%BCritz)
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-SVFort50NeubrandenburgII-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261128T093000
 DTEND;TZID=Europe/Berlin:20261128T115000
 SUMMARY:D-Jugend: HC VG - SV Fort. 50 Neubrandenburg II
@@ -127,7 +126,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Mehrzweckhalle%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-HSVGrimmen1992-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261204T170000
 DTEND;TZID=Europe/Berlin:20261204T192000
 SUMMARY:D-Jugend: HC VG - HSV Grimmen 1992
@@ -144,7 +143,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-PasewalkerHV-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20261213T090000
 DTEND;TZID=Europe/Berlin:20261213T112000
 SUMMARY:D-Jugend: Pasewalker HV - HC VG
@@ -159,7 +158,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Uecker-Sporthalle%
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-StralsunderHVII-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20270110T090000
 DTEND;TZID=Europe/Berlin:20270110T112000
 SUMMARY:D-Jugend: HC VG - Stralsunder HV II
@@ -176,7 +175,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-StavenhagenerSVvon1863-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20270306T130000
 DTEND;TZID=Europe/Berlin:20270306T152000
 SUMMARY:D-Jugend: Stavenhagener SV von 1863 - HC VG
@@ -192,7 +191,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Zweifelderhalle%20
 END:VEVENT
 BEGIN:VEVENT
 UID:D-HCVorpommern-Greifswald-HSV90Waren-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20270313T123000
 DTEND;TZID=Europe/Berlin:20270313T145000
 SUMMARY:D-Jugend: HC VG - HSV 90 Waren
@@ -209,7 +208,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:D-SVFort50NeubrandenburgII-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T010056Z
+DTSTAMP:20261108T010232Z
 DTSTART;TZID=Europe/Berlin:20270410T090000
 DTEND;TZID=Europe/Berlin:20270410T112000
 SUMMARY:D-Jugend: SV Fort. 50 Neubrandenburg II - HC VG
@@ -221,5 +220,43 @@ DESCRIPTION:Auswärtsspiel\nTreff: 09:00 Uhr\nAnwurf: 10:00 Uhr\nHalle: We
  hub.io/hcvg-eltern-app/
 URL:https://www.google.com/maps/dir/?api=1&destination=Webasto%20Arena%2C
  %20Binsenwerderstr.%202%2C%2017033%20Neubrandenburg
+END:VEVENT
+BEGIN:VEVENT
+UID:training-Do-D@hcvg-eltern-app
+DTSTAMP:20261108T010232Z
+DTSTART;TZID=Europe/Berlin:20261105T173000
+DTEND;TZID=Europe/Berlin:20261105T190000
+RRULE:FREQ=WEEKLY;BYDAY=TH;UNTIL=20270630T225959Z
+SUMMARY:Training D-Jugend
+LOCATION:Sporthalle 1 Schönwalde I\, Max-Planck-Straße 9\, 17491 Greifswa
+ ld
+DESCRIPTION:Training D-Jugend\nDonnerstag 17:30 - 19:00 Uhr\nOrt: Halle 1
+ \, Greifswald\nHalle: Sporthalle 1 Schönwalde I\, Max-Planck-Straße 9\, 1
+ 7491 Greifswald\nRoute: https://www.google.com/maps/dir/?api=1&destinatio
+ n=Sporthalle%201%20Sch%C3%B6nwalde%20I%2C%20Max-Planck-Stra%C3%9Fe%209%2C
+ %2017491%20Greifswald\nAlle Infos: https://jari-lulz.github.io/hcvg-elter
+ n-app/
+URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
+ ch%C3%B6nwalde%20I%2C%20Max-Planck-Stra%C3%9Fe%209%2C%2017491%20Greifswal
+ d
+END:VEVENT
+BEGIN:VEVENT
+UID:training-Fr-CD@hcvg-eltern-app
+DTSTAMP:20261108T010232Z
+DTSTART;TZID=Europe/Berlin:20261106T164500
+DTEND;TZID=Europe/Berlin:20261106T180000
+RRULE:FREQ=WEEKLY;BYDAY=FR;UNTIL=20270630T225959Z
+SUMMARY:Training D- und C-Jugend (gemeinsam)
+LOCATION:Sporthalle 1 Schönwalde I\, Max-Planck-Straße 9\, 17491 Greifswa
+ ld
+DESCRIPTION:Training D- und C-Jugend (gemeinsam)\nFreitag 16:45 - 18:00 U
+ hr\nOrt: Halle 1\, Greifswald\nHalle: Sporthalle 1 Schönwalde I\, Max-Pla
+ nck-Straße 9\, 17491 Greifswald\nRoute: https://www.google.com/maps/dir/?
+ api=1&destination=Sporthalle%201%20Sch%C3%B6nwalde%20I%2C%20Max-Planck-St
+ ra%C3%9Fe%209%2C%2017491%20Greifswald\nAlle Infos: https://jari-lulz.gith
+ ub.io/hcvg-eltern-app/
+URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
+ ch%C3%B6nwalde%20I%2C%20Max-Planck-Stra%C3%9Fe%209%2C%2017491%20Greifswal
+ d
 END:VEVENT
 END:VCALENDAR

@@ -305,18 +305,8 @@ tr.mine td:first-child{color:var(--ink)}
 <script>
 /* ---------- Von Hand gepflegt ---------- */
 
-// Trainingszeiten: [Kurz, Tag, Uhrzeit, Jugend]. Jugend "C", "D" oder "CD" (= gemeinsam).
-const TRAINING = {
-  title: "Neue Trainingszeiten",
-  isNew: true,
-  place: "Halle 1, Greifswald",
-  hall: "16830",                       // Sporthalle 1 (Schönwalde I) – Adresse und Route aus HALLS
-  days: [
-    ["Di","Dienstag","18:00–19:00","C"],
-    ["Do","Donnerstag","17:30–19:00","D"],
-    ["Fr","Freitag","16:45–18:00","CD"]
-  ]
-};
+// Trainingszeiten: gepflegt in tools/training.json (gilt für App und Kalender), vom Skript nach data.js geschrieben
+const TRAINING = window.HCVG_DATA?.training || {title:"Training",place:"",hall:"",days:[]};
 
 const US = "HC Vorpommern-Greifswald";
 // Hallen mit Adresse: gepflegt in tools/halls.json, vom Update-Skript nach data.js (hallInfo) geschrieben
@@ -580,8 +570,8 @@ function calUrls(){
 }
 function calTile(){
   const u=calUrls(), ch=id=>`<button class="chip" data-cal="${id}" aria-pressed="${st.cal===id}">${id==="CD"?"Beide":id+"-Jugend"}</button>`;
-  return `<section class="cal" aria-label="Spiele im Kalender">
-    <div class="top">${ICON_CAL}<div><h2>Spiele in deinen Kalender</h2><span class="note">Alle Spiele mit Treff, Anwurf, Halle und Route. Verlegungen aktualisieren sich von selbst.</span></div></div>
+  return `<section class="cal" aria-label="Spiele und Training im Kalender">
+    <div class="top">${ICON_CAL}<div><h2>Spiele &amp; Training in deinen Kalender</h2><span class="note">Alle Spiele mit Treff, Anwurf, Halle und Route, dazu die Trainingszeiten jede Woche. Änderungen kommen von selbst.</span></div></div>
     <div class="chips" role="group" aria-label="Mannschaft">${ch("CD")}${ch("C")}${ch("D")}</div>
     <div class="row">
       <a class="btn primary" href="${u.webcal}">${ICON_CAL} iPhone / iPad</a>
