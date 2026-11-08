@@ -19,6 +19,7 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Läuft mit Windows PowerShell 5.1 und PowerShell 7.
 - Genehmigte Spielberichte werden in `tools/cache/` gespeichert und nicht erneut geladen.
 - Namen werden schon im Skript gekürzt („Vorname N.“), weil es um Kinder geht.
+- In der App zeigt `pName()` unsere Spielerinnen nur mit erstem Vornamen („Annie Lea L.“ → „Annie“). Kommt ein Vorname in beiden Jugenden zusammen mehrfach vor, bleibt das Kürzel („Leni W.“ / „Leni G.“). Andere Teams bleiben „Vorname N.“.
 
 ## Datenquellen (nuLiga HVMV)
 - wJD Bezirksoberliga: group=486919

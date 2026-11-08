@@ -346,6 +346,18 @@ function toGame(r,lg){
 const ALL = Object.entries(LEAGUES).flatMap(([k,L])=>L.games.map(r=>toGame(r,k)));
 const report = g => g.mid ? LEAGUES[g.lg].reports?.[g.mid] : null;
 
+// Unsere Spielerinnen nur mit erstem Vornamen ("Annie Lea L." -> "Annie").
+// Gibt es den Vornamen in beiden Jugenden zusammen mehrfach, bleibt das Kürzel ("Leni W.", "Leni G.").
+const OUR_NAME=(()=>{
+  const full=new Set();
+  for(const g of ALL){ if(!g.mine) continue; const s=report(g)?.[g.home===US?"h":"a"]; for(const p of s?.p||[]) full.add(p[1]); }
+  const first=n=>n.split(" ")[0], count={};
+  for(const n of full) count[first(n)]=(count[first(n)]||0)+1;
+  const m={}; for(const n of full){ const f=first(n), ini=n.trim().split(" ").pop(); m[n]=count[f]>1?`${f} ${ini}`:f; }
+  return m;
+})();
+const pName=(name,team)=>team===US&&OUR_NAME[name]?OUR_NAME[name]:name;
+
 function outcome(g){
   if(!g.res||!g.mine) return "";
   const [h,a]=g.res.split(":").map(Number);const us=g.home===US?h:a, th=g.home===US?a:h;
@@ -404,7 +416,7 @@ function momentum(r,len,persp,upName,downName){
 }
 function scorerList(name,s){
   const list=(s?.p||[]).filter(p=>p[3]>0).sort((a,b)=>b[3]-a[3]);
-  const items=list.map(p=>`<li><span>${esc(p[1])}${p[5]?` <span class="note">(7m ${p[4]}/${p[5]})</span>`:""}</span><span>${p[3]}</span></li>`).join("")||'<li class="note">keine Angaben</li>';
+  const items=list.map(p=>`<li><span>${esc(pName(p[1],name))}${p[5]?` <span class="note">(7m ${p[4]}/${p[5]})</span>`:""}</span><span>${p[3]}</span></li>`).join("")||'<li class="note">keine Angaben</li>';
   const tt=s?`7m ${s.g7}/${s.s7} · Gelb ${s.y} · 2-Min ${s.m2}${s.d?` · Disq. ${s.d}`:""} · Auszeiten ${s.to}`:"";
   return `<div><h4>${teamHtml(name)}</h4><ul>${items}</ul><div class="tt">${tt}</div></div>`;
 }
@@ -528,16 +540,16 @@ function cakeTile(){
   const fresh=done.filter(c=>nowT-c.dt.getTime()<=CAKE_FRESH_DAYS*864e5);
   const line=c=>CAKE_LINES[[...c.name].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAKE_LINES.length];
   let html=`<section class="cake" aria-label="Kuchen-Regel"><div class="top"><span class="em" aria-hidden="true">🎂</span><div><h2>Kuchen-Alarm</h2><span class="note">Wer ihr ${CAKE_GOALS}. Saisontor wirft, bringt zum nächsten Training einen Kuchen mit.</span></div></div>`;
-  html+=fresh.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} gegen ${esc(c.opp)}</small><b>${esc(c.name)} bringt Kuchen mit!</b><span>${esc(line(c))}</span></div>`).join("");
-  if(near.length) html+=`<div class="near"><small>Auf Kuchenkurs</small>${near.slice(0,3).map(p=>`<div class="nr"><span class="nm">${esc(p.name)} <i>${p.k}</i></span><span class="bar"><i style="width:${Math.round(p.g/CAKE_GOALS*100)}%"></i></span><span class="v">noch ${CAKE_GOALS-p.g}</span></div>`).join("")}</div>`;
+  html+=fresh.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} gegen ${esc(c.opp)}</small><b>${esc(pName(c.name,US))} bringt Kuchen mit!</b><span>${esc(line(c))}</span></div>`).join("");
+  if(near.length) html+=`<div class="near"><small>Auf Kuchenkurs</small>${near.slice(0,3).map(p=>`<div class="nr"><span class="nm">${esc(pName(p.name,US))} <i>${p.k}</i></span><span class="bar"><i style="width:${Math.round(p.g/CAKE_GOALS*100)}%"></i></span><span class="v">noch ${CAKE_GOALS-p.g}</span></div>`).join("")}</div>`;
   const old=done.filter(c=>!fresh.includes(c));
-  if(old.length) html+=`<div class="hall-f"><small>Schon gebacken</small>${old.map(c=>`<span>${esc(c.name)} (${c.k}, ${c.dt.getDate()}. ${MON[c.dt.getMonth()]})</span>`).join(" · ")}</div>`;
+  if(old.length) html+=`<div class="hall-f"><small>Schon gebacken</small>${old.map(c=>`<span>${esc(pName(c.name,US))} (${c.k}, ${c.dt.getDate()}. ${MON[c.dt.getMonth()]})</span>`).join(" · ")}</div>`;
   return html+`</section>`;
 }
 
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
-    <figcaption class="cap"><b>Power. Zusammenhalt. <em>Vertrauen.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
+    <figcaption class="cap"><b>Power. Vertrauen. <em>Teamwork.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
   return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile();
 }
 
@@ -614,7 +626,7 @@ function viewStats(k){
   const sc=(id,l)=>`<button class="chip" data-sort="${id}" aria-pressed="${st.sort[k]===id}">${l}</button>`;
   html+=`<section class="sec"><div class="sechead"><h2>Unsere Spielerinnen</h2><div class="chips" role="group" aria-label="Sortieren">${sc("g","Tore")}${sc("avg","Ø")}${sc("g7","7m")}${sc("gp","Spiele")}</div></div>
     <div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Sp</th><th>Tore</th><th>Ø</th><th>7m</th>${anyM2?"<th>2'</th>":""}</tr></thead><tbody>${
-      ours.map((p,i)=>`<tr><td>${i+1}</td><td class="nm">${esc(p.name)}</td><td>${p.gp}</td><td><div class="gbar"><s style="width:${Math.round(p.g/gmax*44)}px"></s><b>${p.g}</b></div></td><td>${fmt1(p.g/p.gp)}</td><td>${p.a7?p.g7+"/"+p.a7:"–"}</td>${anyM2?`<td>${p.m2||"–"}</td>`:""}</tr>`).join("")
+      ours.map((p,i)=>`<tr><td>${i+1}</td><td class="nm">${esc(pName(p.name,US))}</td><td>${p.gp}</td><td><div class="gbar"><s style="width:${Math.round(p.g/gmax*44)}px"></s><b>${p.g}</b></div></td><td>${fmt1(p.g/p.gp)}</td><td>${p.a7?p.g7+"/"+p.a7:"–"}</td>${anyM2?`<td>${p.m2||"–"}</td>`:""}</tr>`).join("")
     }</tbody></table></div>
     <p class="note" style="margin:0">Sp = im Spielberichtsbogen eingetragen. Gelbe Karten und Zeitstrafen werden bei Jugendspielen anonym erfasst und stehen deshalb nur in der Mannschaftsstatistik.</p>
   </section>`;
@@ -627,7 +639,7 @@ function viewStats(k){
     <div class="chips" role="group" aria-label="Filter"><button class="chip" data-topus="0" aria-pressed="${!st.topUs[k]}">Alle</button><button class="chip" data-topus="1" aria-pressed="${st.topUs[k]}">Nur HC VG</button></div></div>
     <span class="note">${top.length} Spielerinnen mit Toren${st.topUs[k]?` · davon ${pool.length} von HC VG, Platz = Rang in der ganzen Liga`:""}</span>
     <div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Tore</th><th>Sp</th><th>Ø</th></tr></thead><tbody>${
-      shown.map((p,i)=>{const r=top.findIndex(q=>q.g===p.g)+1;return `<tr class="${p.team===US?"mine":""}"><td>${r<=3?`<span class="medal m${r}">${r}</span>`:r}</td><td class="nm">${esc(p.name)}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${p.g}</td><td>${p.gp}</td><td>${fmt1(p.g/p.gp)}</td></tr>`;}).join("")
+      shown.map((p,i)=>{const r=top.findIndex(q=>q.g===p.g)+1;return `<tr class="${p.team===US?"mine":""}"><td>${r<=3?`<span class="medal m${r}">${r}</span>`:r}</td><td class="nm">${esc(pName(p.name,p.team))}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${p.g}</td><td>${p.gp}</td><td>${fmt1(p.g/p.gp)}</td></tr>`;}).join("")
     }</tbody></table></div>
     ${pool.length>10?`<button class="chip more" data-top="1" aria-pressed="${st.topAll[k]}">${st.topAll[k]?"Nur Top 10":"Alle "+pool.length+" anzeigen"}</button>`:""}
   </section>`;
