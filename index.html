@@ -64,8 +64,9 @@ header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(
   #view.anim .col .bar{animation:growy .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:bottom center}
   @keyframes growy{from{transform:scaleY(0)}}
   details[open] .gx{animation:rise .35s ease both}
-  details[open] .mom path.ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.4s ease-out .15s forwards}
-  @keyframes draw{to{stroke-dashoffset:0}}
+  /* Spielverlauf deckt sich gleichmäßig von Anpfiff bis Schluss auf */
+  details[open] .mom .plot svg{animation:reveal 3s linear .2s both}
+  @keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
   .seg button{transition:background-color .25s,color .25s}
   .btn,.chip,.mapbtn{transition:transform .15s}
   .btn:active,.chip:active,.mapbtn:active{transform:scale(.96)}
@@ -422,7 +423,7 @@ function momentum(r,len,persp,upName,downName){
     <path d="${area}" clip-path="url(#${id}b)" fill="var(--loss)" opacity=".35"/>
     <line x1="${W/2}" x2="${W/2}" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".7"/>
     <line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="var(--ink)" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".7"/>
-    <path class="ln" d="${line}" pathLength="1" fill="none" stroke="var(--ink)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+    <path class="ln" d="${line}" fill="none" stroke="var(--ink)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
   </svg>
   <span class="zt up">▲ ${esc(upName)} führt</span><span class="zt mid">Mittellinie = Gleichstand</span><span class="zt dn">▼ ${esc(downName)} führt</span>
   </div>
