@@ -116,6 +116,7 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .times span{font-size:13px;opacity:.85}
 .times .treff{background:var(--tape);color:var(--tape-ink)}
 .count{font:800 14px/1 var(--display);background:var(--tape);color:var(--tape-ink);padding:6px 9px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
+.count.md{background:#e63946;color:#fff;letter-spacing:.08em}
 .match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
 .team{font:800 20px/1.05 var(--display);text-transform:uppercase;text-wrap:balance;min-width:0}
 .team.away{text-align:right}
@@ -508,7 +509,7 @@ function gameDetail(g){
 
 function countdown(dt){
   const now=new Date();const days=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
-  if(days<=0) return "Heute";
+  if(days<=0) return "Matchday";
   if(days===1) return "Morgen";
   return `in ${days} Tagen`;
 }
@@ -584,7 +585,7 @@ function nextCard(k){
     ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b><span>Uhr</span></div><div><small>Anwurf</small><b>${esc(g.time)}</b><span>Uhr</span></div></div>`
     : `<div class="times"><div><small>Anwurf</small><b>offen</b></div></div>`;
   return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend">
-    <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span><span class="count">${countdown(g.dt)}</span></div>
+    <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span><span class="count${countdown(g.dt)==="Matchday"?" md":""}">${countdown(g.dt)==="Matchday"?"🔥 Matchday":countdown(g.dt)}</span></div>
     ${times}
     <div class="match"><div class="team ${home?"us":""}">${esc(home?US:sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(home?sn(g.away):US)}</div></div>
     <div class="hall"><b>${home?"Heimspiel":"Auswärts"}</b> · ${esc(hallName(g.loc))}${hallCity(g.loc)?", "+esc(hallCity(g.loc).replace(/^\d{5}\s*/,"")):""}${g.note?` · ${esc(g.note)}`:""}</div>
@@ -947,7 +948,7 @@ function viewOpponent(k){
   const g=upcoming(ALL.filter(x=>x.mine&&x.lg===k)).find(x=>x.dt&&realTeam(x.home)&&realTeam(x.away));
   if(!g) return `<section class="sec"><div class="empty">Zurzeit ist kein Gegner angesetzt.</div></section>`;
   const opp=g.home===US?g.away:g.home, P=teamProfile(k,opp), M=teamProfile(k,US), on=esc(sn(opp));
-  let html=`<section class="board" aria-label="Nächster Gegner"><div class="when"><span class="lg">${k}-Jugend · nächster Gegner</span><span class="count">${countdown(g.dt)}</span></div>
+  let html=`<section class="board" aria-label="Nächster Gegner"><div class="when"><span class="lg">${k}-Jugend · nächster Gegner</span><span class="count${countdown(g.dt)==="Matchday"?" md":""}">${countdown(g.dt)==="Matchday"?"🔥 Matchday":countdown(g.dt)}</span></div>
     <div class="date">${on}</div>
     <p class="hall" style="margin:0">${WDL[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}${g.time?`, ${esc(g.time)} Uhr`:""} · ${g.home===US?"Heimspiel":"Auswärts"}${P?`<br>Tabellenplatz ${P.rank} · ${esc(P.pts)} Punkte · ${P.t.w} S / ${P.t.x} U / ${P.t.l} N`:""}</p></section>`;
   if(!P) return html+`<section class="sec"><div class="empty">Von ${on} gibt es noch keine Spielberichte.</div></section>`;
