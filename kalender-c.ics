@@ -26,7 +26,7 @@ END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-WolgasterHV2000-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20260913T110000
 DTEND;TZID=Europe/Berlin:20260913T133000
 SUMMARY:C-Jugend: HC VG - Wolgaster HV 2000 (30:15)
@@ -43,7 +43,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HSV90Waren-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20260926T080000
 DTEND;TZID=Europe/Berlin:20260926T103000
 SUMMARY:C-Jugend: HSV 90 Waren - HC VG (26:14)
@@ -61,7 +61,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%20am%20
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-StralsunderHVII-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261011T110000
 DTEND;TZID=Europe/Berlin:20261011T133000
 SUMMARY:C-Jugend: HC VG - Stralsunder HV II (27:18)
@@ -78,7 +78,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-SVMotorBarth-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261031T120000
 DTEND;TZID=Europe/Berlin:20261031T143000
 SUMMARY:C-Jugend: SV Motor Barth - HC VG (20:33)
@@ -93,7 +93,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Vineta%20Sportaren
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-SVFort50NeubrandenburgII-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261107T130000
 DTEND;TZID=Europe/Berlin:20261107T153000
 SUMMARY:C-Jugend: HC VG - SV Fort. 50 Neubrandenburg II (22:26)
@@ -111,7 +111,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Mehrzweckhalle%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-AnklamerHV-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261114T110000
 DTEND;TZID=Europe/Berlin:20261114T133000
 SUMMARY:C-Jugend: Anklamer HV - HC VG
@@ -126,7 +126,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Mehrzweckhalle%20V
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-HVAltentreptow-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261128T133000
 DTEND;TZID=Europe/Berlin:20261128T160000
 SUMMARY:C-Jugend: HC VG - HV Altentreptow
@@ -143,7 +143,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Mehrzweckhalle%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-StavenhagenerSVvon1863-HCVorpommern-Greifswald-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261205T130000
 DTEND;TZID=Europe/Berlin:20261205T153000
 SUMMARY:C-Jugend: Stavenhagener SV von 1863 - HC VG
@@ -159,7 +159,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Zweifelderhalle%20
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-PlatzhalterEndrundenspiele-1@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20270110T110000
 DTEND;TZID=Europe/Berlin:20270110T133000
 SUMMARY:C-Jugend: HC VG - Gegner offen
@@ -177,7 +177,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-PlatzhalterEndrundenspiele-2@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20270314T090000
 DTEND;TZID=Europe/Berlin:20270314T113000
 SUMMARY:C-Jugend: HC VG - Gegner offen
@@ -195,7 +195,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-PlatzhalterEndrundenspiele-3@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20270418T090000
 DTEND;TZID=Europe/Berlin:20270418T113000
 SUMMARY:C-Jugend: HC VG - Gegner offen
@@ -213,7 +213,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:C-HCVorpommern-Greifswald-PlatzhalterEndrundenspiele-4@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20270501T090000
 DTEND;TZID=Europe/Berlin:20270501T113000
 SUMMARY:C-Jugend: HC VG - Gegner offen
@@ -231,7 +231,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:training-Di-C@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261103T180000
 DTEND;TZID=Europe/Berlin:20261103T190000
 RRULE:FREQ=WEEKLY;BYDAY=TU;UNTIL=20270630T225959Z
@@ -250,7 +250,7 @@ URL:https://www.google.com/maps/dir/?api=1&destination=Sporthalle%201%20S
 END:VEVENT
 BEGIN:VEVENT
 UID:training-Fr-CD@hcvg-eltern-app
-DTSTAMP:20261108T120718Z
+DTSTAMP:20261108T120852Z
 DTSTART;TZID=Europe/Berlin:20261106T164500
 DTEND;TZID=Europe/Berlin:20261106T180000
 RRULE:FREQ=WEEKLY;BYDAY=FR;UNTIL=20270630T225959Z
