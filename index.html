@@ -43,7 +43,7 @@ figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
-.hero .cap b{font:800 clamp(18px,6.4vw,32px)/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.hero .cap b{font:800 clamp(17px,5.7vw,32px)/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .hero .cap b i,.hero .cap b em{font-style:normal;display:inline-block}
 .hero .cap b em{color:var(--tape)}
 
@@ -609,7 +609,7 @@ function calTile(){
 
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
-    <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Vertrauen.</i> <em style="--w:2">Teamwork.</em></b><span>Gemeinsam auf dem Feld, gemeinsam am Spielfeldrand</span></figcaption></figure>`;
+    <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg</span></figcaption></figure>`;
   return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile() + calTile();
 }
 
