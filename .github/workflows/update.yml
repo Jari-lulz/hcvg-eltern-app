@@ -3,9 +3,12 @@ name: Daten aktualisieren
 
 on:
   schedule:
-    # Zeiten in UTC (Winterzeit: deutsche Zeit = UTC + 1)
-    - cron: "*/30 7-19 * * 6,0"   # Sa + So: alle 30 Minuten, 8 bis 21 Uhr
-    - cron: "15 5 * * 1-5"        # Mo bis Fr: einmal morgens (Verlegungen, Spielberichte)
+    # Am Wochenende plus Mittwochabend, sonst finden keine Spiele statt.
+    # Zeiten in UTC (Winterzeit: deutsche Zeit = UTC + 1, Sommerzeit: UTC + 2)
+    - cron: "*/30 6-20 * * 6"     # Samstag: alle 30 Minuten, 7:00 bis 21:30 Uhr
+    - cron: "*/30 6-16 * * 0"     # Sonntag: alle 30 Minuten, 7:00 bis 17:30 Uhr
+    - cron: "0 17 * * 0"          # Sonntag: letztes Update um 18:00 Uhr
+    - cron: "0 17 * * 3"          # Mittwoch 18:00 Uhr (falls ein Nachholspiel war)
   push:
     branches: [main]
   workflow_dispatch:               # "Run workflow"-Knopf auf GitHub
