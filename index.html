@@ -64,7 +64,7 @@ header h1{font-size:clamp(16px,5vw,26px);white-space:nowrap;overflow:hidden;text
 header .eyebrow{font-size:10.5px;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header .logo{width:36px;height:36px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
-figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/4.6;cursor:pointer;max-width:100%;background:var(--court)}
+figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/5.2;cursor:pointer;max-width:100%;background:var(--court)}
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:10px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
@@ -144,13 +144,16 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .brow .btn.share{flex:0 0 40px;padding:9px 0}
 .brow .btn.share svg{width:18px;height:18px}
 /* Kompakte Spielkarte auf der Startseite */
-.board.nc{padding:9px 14px;gap:6px}
+.board.nc{padding:10px 14px;gap:7px}
+.fold{display:flex;flex-direction:column;gap:10px}
 /* Kaderübersicht */
 .kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .kp2{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
 .kp2 div{display:flex;flex-direction:column;min-width:0}
 .kp2 b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kp2 .note{font-size:12px}
+.kp2 .pt{font:700 12px/1.3 var(--body);color:var(--accent)}
+.nw{white-space:nowrap}
 .kn2{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ours);color:var(--on-ours);font:800 16px/1 var(--display)}
 .hero .cap span u{text-decoration:none;color:var(--tape);font-weight:700;white-space:nowrap}
 figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
@@ -704,22 +707,31 @@ function calTile(){
   </section>`;
 }
 
+// Powertime: 10-Minuten-Abschnitt(e) mit den meisten Toren der Spielerin (ab 2 Toren mit Zeitangabe)
+function powertime(k,p){
+  if(!p.b) return "";
+  const tracked=p.b.reduce((s,v)=>s+v,0); if(tracked<2) return "";
+  const mx=Math.max(...p.b);
+  return p.b.map((v,i)=>v===mx?`<span class="nw">${i*10}–${Math.min((i+1)*10,LEN[k])}′</span>`:null).filter(Boolean).join(" & ");
+}
+
 // Kader: alle Spielerinnen, die in einem Spielbericht stehen, je Jugend nach Rückennummer
 function viewKader(){
   let html=`<section class="sec"><button class="btn line" data-back="1" style="align-self:flex-start">← Zurück</button><h2>Unsere Mannschaften</h2></section>`;
   for(const k of ["D","C"]){
     const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
     html+=`<section class="sec"><div class="sechead"><h2>${k}-Jugend</h2><span class="note">${ps.length} Spielerinnen</span></div>
-      <div class="kader">${ps.map(p=>`<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span></div></div>`).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
+      <div class="kader">${ps.map(p=>{const pt=powertime(k,p);return `<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${pt?`<span class="pt">⚡ Powertime ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
   }
-  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene.</p>`;
+  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene. ⚡ Powertime = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
   return html;
 }
 
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0" data-kader="1" role="button" tabindex="0" aria-label="Mannschaft anzeigen"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
     <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg · <u>Mannschaft ansehen ›</u></span></figcaption></figure>`;
-  return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile() + calTile();
+  // .fold = erster Bildschirm (Foto + beide Spiele); wird per sizeFold() auf Bildschirmhöhe gestreckt
+  return `<div class="fold">${hero}${nextCard("C")}${nextCard("D")}</div>` + cakeTile() + trainingTile() + calTile();
 }
 
 const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", anaMode:"team", ligaUs:false, cal:"CD", cmp:{D:"gf",C:"gf"} };
@@ -765,7 +777,7 @@ function viewStats(k){
   const best=me.best;
 
   // Kennzahlen
-  let html=`<section class="sec"><h2>HC VG in Zahlen</h2><div class="kpis">
+  let html=`<section class="sec"><h2>${k}-Jugend in Zahlen</h2><div class="kpis">
     <div class="kpi hero"><b>${rank}.</b><span>Platz · ${esc(row?.[7]||"")} Punkte</span></div>
     <div class="kpi"><b>${me.w}-${me.x}-${me.l}</b><span>Siege · Remis · Niederlagen</span></div>
     <div class="kpi"><b>${fmt1(me.gf/me.gp)}</b><span>Tore pro Spiel</span></div>
@@ -1130,12 +1142,21 @@ try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C","ana"].includes
 function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-ana",st.ana);localStorage.setItem("hcvg-anamode",st.anaMode);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
 // Einblend-Animation nur beim Wechsel von Seite/Unterreiter, nicht bei Filter- oder Sortierknöpfen
 let animNext=true;
+// Startseite: Foto + beide Spielkarten füllen genau den ersten Bildschirm, Kuchen-Alarm & Co. beginnen darunter
+function sizeFold(){
+  const f=view.querySelector(".fold"); if(!f) return;
+  f.style.minHeight="";
+  const need=window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-4;
+  if(f.offsetHeight<need) f.style.minHeight=need+"px";
+}
+window.addEventListener("resize",()=>{ if(current==="us") sizeFold(); });
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
   view.innerHTML = current==="us"?viewUs():current==="kader"?viewKader():current==="ana"?viewAnalysis():viewLeague(current);
   view.classList.remove("anim");
   if(animNext){ [...view.children].forEach((el,i)=>el.style.setProperty("--i",Math.min(i,8))); void view.offsetWidth; view.classList.add("anim"); }
   animNext=false;
+  sizeFold();
   document.getElementById("stand").textContent=`Datenstand: ${DATA.updated} · Quelle: nuLiga HVMV (BHV Ost 2026/27). Ohne Gewähr – kurzfristige Verlegungen bitte beim Trainer erfragen.`;
 }
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();animNext=true;render();window.scrollTo({top:0});}));
