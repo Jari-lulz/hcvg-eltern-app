@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - handball.net (geprüft 11/2026): Vereinsseite `/club/0e22k3j` zeigt keine Teams, die API (`/api/new/...`) antwortet mit 403. Keine zusätzlichen Daten.
 
 ## Startseite
-- Nur: nächstes Spiel C-Jugend, nächstes Spiel D-Jugend (Treff = 1 Stunde vor Anwurf, Countdown, Route, Live-Ticker-Link) und die Trainingszeiten (ohne Adresse/Route, die Halle kennen alle).
+- Banner, nächstes Spiel C-Jugend, nächstes Spiel D-Jugend (Treff = 1 Stunde vor Anwurf, Countdown, Route, Live-Ticker-Link), Kuchen-Zeile und die Trainingszeiten (mit Adresse und Google-Maps-Knopf).
 - Ergebnisse, Tabellen und Statistik stehen in den Reitern D-Jugend und C-Jugend.
 - Gelbe Karten und Zeitstrafen sind bei Jugendspielen anonym, also nur pro Mannschaft verfügbar.
 
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 ## Kuchen-Regel (Startseite)
 - Wer in einem Spiel das 30. Mannschaftstor für uns wirft, bringt zum nächsten Training Kuchen mit.
 - Die Werferin steht nicht im nuLiga-Bericht. `Get-Scorer30` im Skript liest sie aus der nuScore-Ereignisliste (`.../nuScoreLiveRestBackend/api/1/events/<Bericht-ID>`, Code 4 = Tor, 5 = 7m-Tor, mit Spielstand und Name). Ergebnis: `leagues[k].cake = { Bericht-ID: "Vorname N." }`, zwischengespeichert in `tools/cache/cake-<id>.txt`.
-- Startseite (`cakeTile()`): nur wenn im letzten Spiel einer Jugend das 30. Tor fiel und das Spiel höchstens 10 Tage her ist (`CAKE_FRESH_DAYS`). Höchstens zwei Einträge (D und C). Sonst ist die Kachel ausgeblendet.
+- Startseite (`cakeTile()`): immer eine kleine Zeile „Kuchen-Alarm · nächster Kuchen“. Gelb mit Namen, wenn im letzten Spiel einer Jugend das 30. Tor fiel und das Spiel höchstens 10 Tage her ist (`CAKE_FRESH_DAYS`), höchstens D und C zusammen. Sonst „Noch frei!“ mit einem wöchentlich wechselnden Spruch (`CAKE_EMPTY`).
 - Statistik je Jugend: „Kuchen-Chronik“ mit allen bisherigen 30. Toren.
 
 ## Bilder

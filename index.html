@@ -57,9 +57,9 @@ header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(
   @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.85)}}
   .count{animation:beat 2.6s ease-in-out infinite}
   @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-  .cake .em{display:inline-block;animation:wiggle 2.2s ease-in-out infinite;transform-origin:50% 90%}
+  .cakeline .em{display:inline-block;animation:wiggle 2.2s ease-in-out infinite;transform-origin:50% 90%}
   @keyframes wiggle{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-12deg)}80%{transform:rotate(10deg)}90%{transform:rotate(-5deg)}}
-  #view.anim .hb .fill,#view.anim .cake .nr .bar i,#view.anim .gbar s{animation:growx .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:left center}
+  #view.anim .hb .fill,#view.anim .gbar s{animation:growx .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:left center}
   @keyframes growx{from{transform:scaleX(0)}}
   #view.anim .col .bar{animation:growy .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:bottom center}
   @keyframes growy{from{transform:scaleY(0)}}
@@ -132,25 +132,20 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .day .tm{grid-area:t;font:700 20px/1.15 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .day .who{grid-area:w;font:700 13px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
 .day .who.both{background:var(--tape);color:var(--tape-ink);border-color:var(--tape)}
-.train .where{font-size:15px}
+.train .where{font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.train .where>span{min-width:0}
 
-/* Kuchen-Alarm */
-.cake{background:var(--surface);border:2px dashed var(--tape);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.cake .top{display:flex;gap:12px;align-items:center}
-.cake .em{font-size:40px;line-height:1}
-.cake small{display:block;font:700 11px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.cake .due{background:var(--tape);color:var(--tape-ink);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
-.cake .due small{color:var(--tape-ink);opacity:.75}
-.cake .due b{font:800 26px/1.05 var(--display);text-transform:uppercase;text-wrap:balance}
-.cake .due span{font-size:14px}
-.cake .near{display:flex;flex-direction:column;gap:8px}
-.cake .nr{display:grid;grid-template-columns:minmax(0,1fr) 96px 58px;gap:10px;align-items:center;font-size:14px}
-.cake .nr .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cake .nr .nm i{font-style:normal;font:700 11px/1 var(--display);background:var(--bg);color:var(--muted);padding:2px 5px;border-radius:4px;margin-left:4px}
-.cake .nr .bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
-.cake .nr .bar i{display:block;height:100%;background:var(--tape);border-radius:5px}
-.cake .nr .v{font:700 14px/1 var(--display);color:var(--muted);white-space:nowrap}
-.cake .hall-f{font-size:13px;color:var(--muted)}
+/* Kuchen-Alarm: kleine Zeile auf der Startseite */
+.cakeline{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--surface);border:2px dashed var(--tape);border-radius:14px;padding:10px 14px}
+.cakeline .em{font-size:30px;line-height:1}
+.cakeline div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cakeline small{font:700 11px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cakeline b{font:800 19px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.cakeline b i{font-style:normal;font:700 11px/1 var(--display);padding:2px 5px;border-radius:4px;background:var(--bg);color:var(--muted);vertical-align:middle}
+.cakeline span{font-size:13px;color:var(--muted)}
+.cakeline.due{background:var(--tape);border-style:solid;color:var(--tape-ink)}
+.cakeline.due small,.cakeline.due span{color:var(--tape-ink);opacity:.8}
+.cakeline.due b i{background:rgba(0,0,0,.12);color:var(--tape-ink)}
 
 /* lists */
 .list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -306,6 +301,7 @@ const TRAINING = {
   title: "Neue Trainingszeiten",
   isNew: true,
   place: "Halle 1, Greifswald",
+  hall: "16830",                       // Sporthalle 1 (Schönwalde I) – Adresse und Route aus HALLS
   days: [
     ["Di","Dienstag","18:00–19:00","C"],
     ["Do","Donnerstag","17:30–19:00","D"],
@@ -509,7 +505,8 @@ function trainingTile(){
       <b>${esc(a)}</b><span class="dn">${esc(full)}${who==="CD"?" · beide zusammen":""}</span>
       <span class="tm">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span>
       <span class="who ${who==="CD"?"both":""}">${who==="CD"?"C + D":esc(who)+"-Jugend"}</span></div>`).join("")}</div>
-    <div class="where"><b>${esc(t.place)}</b></div>
+    <div class="where"><span><b>${esc(t.place)}</b><br><span class="note">${esc(hallName(t.hall))} · ${esc(hallAddr(t.hall))}</span></span>
+      <a class="btn line" href="${mapsUrl(t.hall)}" target="_blank" rel="noopener">${ICON_PIN} Google Maps</a></div>
   </section>`;
 }
 
@@ -561,12 +558,23 @@ const CAKE_LINES=[
   "Der Rest der Mannschaft atmet auf. Erst Torjägerin, jetzt Bäckerin – das nennt man Allrounderin."
 ];
 const cakeLine=c=>CAKE_LINES[[...c.name+c.k].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAKE_LINES.length];
+// Wenn gerade niemand dran ist – wechselt jede Woche
+const CAKE_EMPTY=[
+  "Wer im nächsten Spiel das 30. Tor wirft, schwingt den Kochlöffel.",
+  "Der Ofen ist vorgeheizt – es fehlt nur noch das 30. Tor.",
+  "Die Gabeln liegen bereit. Das 30. Tor leider noch nicht.",
+  "Das Rezept liegt schon da. Gesucht: die Torschützin Nr. 30."
+];
+// Kleine Zeile auf der Startseite: immer sichtbar, zeigt wer den nächsten Kuchen mitbringt (höchstens D und C)
 function cakeTile(){
   const due=cakeDue();
-  if(!due.length) return "";
-  return `<section class="cake" aria-label="Kuchen-Alarm"><div class="top"><span class="em" aria-hidden="true">🎂</span><div><h2>Kuchen-Alarm</h2><span class="note">Wer im Spiel das 30. Tor für uns wirft, bringt zum nächsten Training Kuchen mit.</span></div></div>
-    ${due.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} ${c.home?"gegen":"bei"} ${esc(c.opp)}</small><b>${esc(pName(c.name,US))} bringt Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c))}</span></div>`).join("")}
-  </section>`;
+  if(!due.length){
+    const wk=Math.floor(Date.now()/(7*864e5));
+    return `<section class="cakeline" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>Noch frei!</b><span>${esc(CAKE_EMPTY[wk%CAKE_EMPTY.length])}</span></div></section>`;
+  }
+  const names=due.map(c=>`${esc(pName(c.name,US))} <i>${c.k}</i>`).join(" &amp; ");
+  const c0=due[0];
+  return `<section class="cakeline due" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>${names} ${due.length>1?"bringen":"bringt"} Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c0))}</span></div></section>`;
 }
 
 function viewUs(){
