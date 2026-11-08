@@ -109,6 +109,24 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .day .who.both{background:var(--tape);color:var(--tape-ink);border-color:var(--tape)}
 .train .where{font-size:15px}
 
+/* Kuchen-Alarm */
+.cake{background:var(--surface);border:2px dashed var(--tape);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.cake .top{display:flex;gap:12px;align-items:center}
+.cake .em{font-size:40px;line-height:1}
+.cake small{display:block;font:700 11px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cake .due{background:var(--tape);color:var(--tape-ink);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.cake .due small{color:var(--tape-ink);opacity:.75}
+.cake .due b{font:800 26px/1.05 var(--display);text-transform:uppercase;text-wrap:balance}
+.cake .due span{font-size:14px}
+.cake .near{display:flex;flex-direction:column;gap:8px}
+.cake .nr{display:grid;grid-template-columns:minmax(0,1fr) 96px 58px;gap:10px;align-items:center;font-size:14px}
+.cake .nr .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cake .nr .nm i{font-style:normal;font:700 11px/1 var(--display);background:var(--bg);color:var(--muted);padding:2px 5px;border-radius:4px;margin-left:4px}
+.cake .nr .bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.cake .nr .bar i{display:block;height:100%;background:var(--tape);border-radius:5px}
+.cake .nr .v{font:700 14px/1 var(--display);color:var(--muted);white-space:nowrap}
+.cake .hall-f{font-size:13px;color:var(--muted)}
+
 /* lists */
 .list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .list>*+*{border-top:1px solid var(--line)}
@@ -209,6 +227,12 @@ tr.mine td:first-child{color:var(--ink)}
 .more{align-self:center}
 
 /* Analyse */
+.cmpt td:first-child{font:600 14px/1.25 var(--body);text-align:left;color:var(--ink);width:auto;white-space:normal}
+.cmpt th:first-child{text-align:left}
+.cmpt th:nth-child(2),.cmpt td:nth-child(2){text-align:right}
+.cmpt td small{display:block;font:500 11px/1.3 var(--body);color:var(--muted)}
+.cmpt td.me{font:800 18px/1 var(--display);color:var(--accent)}
+.cmpt th:last-child,.cmpt td:last-child{white-space:normal}
 .ana-sum .sum{margin:0;font-size:16px;line-height:1.5}
 .ana-sum .sum b{color:var(--tape)}
 .ais{display:flex;flex-direction:column;gap:8px}
@@ -254,7 +278,7 @@ tr.mine td:first-child{color:var(--ink)}
 
 // Trainingszeiten: [Kurz, Tag, Uhrzeit, Jugend]. Jugend "C", "D" oder "CD" (= gemeinsam).
 const TRAINING = {
-  title: "Training ab den Herbstferien",
+  title: "Neue Trainingszeiten",
   isNew: true,
   place: "Halle 1, Greifswald",
   days: [
@@ -475,10 +499,46 @@ function nextCard(k){
   </section>`;
 }
 
+/* Kuchen-Regel: Wer in einer Jugend ihr 30. Saisontor wirft, bringt zum nächsten Training einen Kuchen mit. */
+const CAKE_GOALS=30, CAKE_FRESH_DAYS=14;
+function cakeData(){
+  const done=[], near=[];
+  for(const k of ["D","C"]){
+    const games=ALL.filter(g=>g.lg===k&&g.mine&&g.res&&report(g)).sort((a,b)=>a.dt-b.dt);
+    const cum={}, names={};
+    for(const g of games){
+      const s=report(g)[g.home===US?"h":"a"]; if(!s) continue;
+      for(const p of s.p||[]){
+        const key=p[2]||p[1], before=cum[key]||0; cum[key]=before+p[3]; names[key]=p[1];
+        if(before<CAKE_GOALS&&cum[key]>=CAKE_GOALS) done.push({name:p[1],k,dt:g.dt,opp:sn(g.home===US?g.away:g.home)});
+      }
+    }
+    Object.entries(cum).filter(([,v])=>v<CAKE_GOALS&&v>0).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([key,v])=>near.push({name:names[key],k,g:v}));
+  }
+  return {done:done.sort((a,b)=>b.dt-a.dt),near:near.sort((a,b)=>b.g-a.g)};
+}
+const CAKE_LINES=[
+  "Das Torgesetz ist eindeutig: 30 Tore = 1 Kuchen. Die Mannschaft hat schon die Gabeln gezückt.",
+  "Erst Torjägerin, jetzt Bäckerin. Gern mit extra Streuseln!",
+  "30 Mal hat das Netz gezappelt – jetzt darf der Kuchen zappeln. Mmh!",
+  "Glückwunsch zum 30. Saisontor! Die Torhüterinnen der Liga atmen auf, die Mannschaft hat Hunger."
+];
+function cakeTile(){
+  const {done,near}=cakeData(), nowT=Date.now();
+  const fresh=done.filter(c=>nowT-c.dt.getTime()<=CAKE_FRESH_DAYS*864e5);
+  const line=c=>CAKE_LINES[[...c.name].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAKE_LINES.length];
+  let html=`<section class="cake" aria-label="Kuchen-Regel"><div class="top"><span class="em" aria-hidden="true">🎂</span><div><h2>Kuchen-Alarm</h2><span class="note">Wer ihr ${CAKE_GOALS}. Saisontor wirft, bringt zum nächsten Training einen Kuchen mit.</span></div></div>`;
+  html+=fresh.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} gegen ${esc(c.opp)}</small><b>${esc(c.name)} bringt Kuchen mit!</b><span>${esc(line(c))}</span></div>`).join("");
+  if(near.length) html+=`<div class="near"><small>Auf Kuchenkurs</small>${near.slice(0,3).map(p=>`<div class="nr"><span class="nm">${esc(p.name)} <i>${p.k}</i></span><span class="bar"><i style="width:${Math.round(p.g/CAKE_GOALS*100)}%"></i></span><span class="v">noch ${CAKE_GOALS-p.g}</span></div>`).join("")}</div>`;
+  const old=done.filter(c=>!fresh.includes(c));
+  if(old.length) html+=`<div class="hall-f"><small>Schon gebacken</small>${old.map(c=>`<span>${esc(c.name)} (${c.k}, ${c.dt.getDate()}. ${MON[c.dt.getMonth()]})</span>`).join(" · ")}</div>`;
+  return html+`</section>`;
+}
+
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
     <figcaption class="cap"><b>Power. Zusammenhalt. <em>Vertrauen.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
-  return hero + nextCard("C") + nextCard("D") + trainingTile();
+  return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile();
 }
 
 const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cmp:{D:"gf",C:"gf"} };
@@ -610,32 +670,42 @@ function analyse(k){
   const avg=fn=>T.reduce((s,t)=>s+fn(t),0)/n;
   const plus=[], minus=[];
   const top3=Math.max(1,Math.round(n/3)), low3=n-top3+1;
+  // Vergleich: Liga-Schnitt und bestes anderes Team
+  const others=T.filter(t=>t!==me);
+  const bestOther=(fn,lowGood)=>others.reduce((b,t)=>!b||(lowGood?fn(t)<fn(b):fn(t)>fn(b))?t:b,null);
+  const cmp=(fn,lowGood,f)=>{const b=bestOther(fn,lowGood);return ` Liga-Schnitt: ${f(avg(fn))}.${b?` Bestes anderes Team: ${esc(sn(b.name))} mit ${f(fn(b))}.`:""}`;};
+  const pc=v=>Math.round(v*100)+" %";
 
   // Angriff / Abwehr
   const gf=t=>t.gf/t.gp, ga=t=>t.ga/t.gp;
   const rA=rankOf(gf), rD=rankOf(ga,true);
-  if(rA<=top3) plus.push({w:4-rA/n,t:"Torgefährlicher Angriff",x:`${fmt1(gf(me))} Tore pro Spiel – Platz ${rA} von ${n} in der Liga.`});
-  else if(rA>=low3) minus.push({w:3,t:"Zu wenig Tore",x:`Nur ${fmt1(gf(me))} Tore pro Spiel (Platz ${rA} von ${n}).`,
+  if(rA<=top3) plus.push({w:4-rA/n,t:"Torgefährlicher Angriff",x:`${fmt1(gf(me))} Tore pro Spiel – Platz ${rA} von ${n} in der Liga.`+cmp(gf,false,fmt1)});
+  else if(rA>=low3) minus.push({w:3,t:"Zu wenig Tore",x:`Nur ${fmt1(gf(me))} Tore pro Spiel (Platz ${rA} von ${n}).`+cmp(gf,false,fmt1),
     f:["Torabschluss","Würfe aus vollem Lauf, Tempogegenstoß nach Ballgewinn, Wurfvarianten von Außen und Rückraum."]});
-  if(rD<=top3) plus.push({w:4.2-rD/n,t:rD===1?"Beste Abwehr der Liga":"Stabile Abwehr",x:`Nur ${fmt1(ga(me))} Gegentore pro Spiel – Platz ${rD} von ${n}.`});
-  else if(rD>=low3) minus.push({w:3.2,t:"Viele Gegentore",x:`${fmt1(ga(me))} Gegentore pro Spiel (Platz ${rD} von ${n}).`,
+  if(rD<=top3) plus.push({w:4.2-rD/n,t:rD===1?"Beste Abwehr der Liga":"Stabile Abwehr",x:`Nur ${fmt1(ga(me))} Gegentore pro Spiel – Platz ${rD} von ${n}.`+cmp(ga,true,fmt1)});
+  else if(rD>=low3) minus.push({w:3.2,t:"Viele Gegentore",x:`${fmt1(ga(me))} Gegentore pro Spiel (Platz ${rD} von ${n}).`+cmp(ga,true,fmt1),
     f:["Abwehrarbeit","1-gegen-1, gemeinsames Verschieben, Rückzug nach Ballverlust."]});
 
   // Siebenmeter
   const q=t=>t.s7?t.g7/t.s7:0, qa=avg(q);
   if(me.s7>=5){
-    if(q(me)>=qa+0.07) plus.push({w:2,t:"Sicher vom Siebenmeter",x:`${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}), Liga-Schnitt ${Math.round(qa*100)} %.`});
-    else if(q(me)<=qa-0.07||q(me)<0.55) minus.push({w:2.5+(qa-q(me))*5,t:"Siebenmeter-Quote",x:`Nur ${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}), Liga-Schnitt ${Math.round(qa*100)} %.`,
+    if(q(me)>=qa+0.07) plus.push({w:2,t:"Sicher vom Siebenmeter",x:`${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}).`+cmp(q,false,pc)});
+    else if(q(me)<=qa-0.07||q(me)<0.55) minus.push({w:2.5+(qa-q(me))*5,t:"Siebenmeter-Quote",x:`Nur ${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}).`+cmp(q,false,pc),
       f:["Siebenmeter","Am Ende jedes Trainings ein paar Siebenmeter unter Druck: feste Werferinnen, eigene Wurfecke, Torhüterin als Gegnerin."]});
   }
 
   // Fairness / Strafen
   const pen=t=>t.rg?(t.y+t.m2+t.d)/t.rg:0, pa=avg(pen);
   if(me.rg){
-    if(pen(me)<=pa*0.75) plus.push({w:1.5,t:"Faire Abwehr",x:`${fmt1(pen(me))} Strafen pro Spiel, Liga-Schnitt ${fmt1(pa)}.`});
-    else if(pen(me)>=pa*1.3) minus.push({w:2,t:"Viele Strafen",x:`${fmt1(pen(me))} Strafen pro Spiel, Liga-Schnitt ${fmt1(pa)}.`,
+    if(pen(me)<=pa*0.75) plus.push({w:1.5,t:"Faire Abwehr",x:`${fmt1(pen(me))} Strafen pro Spiel.`+cmp(pen,true,fmt1)});
+    else if(pen(me)>=pa*1.3) minus.push({w:2,t:"Viele Strafen",x:`${fmt1(pen(me))} Strafen pro Spiel.`+cmp(pen,true,fmt1),
       f:["Fair verteidigen","Beinarbeit statt Klammern: Gegnerin mit dem Körper stellen, Arme hoch."]});
   }
+
+  // Vergleichstabelle für die Ansicht
+  const gd=t=>(t.gf-t.ga)/t.gp, sgn=v=>(v>0?"+":"")+fmt1(v);
+  const rows=[["Tore pro Spiel",gf,false,fmt1],["Gegentore pro Spiel",ga,true,fmt1],["Tordifferenz pro Spiel",gd,false,sgn],["7-Meter-Quote",q,false,pc],["Strafen pro Spiel",pen,true,fmt1]]
+    .map(([l,fn,lg,f])=>{const b=bestOther(fn,lg);return {l,me:f(fn(me)),avg:f(avg(fn)),best:b?f(fn(b)):"–",bn:b?sn(b.name):"",rk:rankOf(fn,lg),lg};});
 
   // Erste vs. zweite Halbzeit
   const our=ALL.filter(g=>g.lg===k&&g.mine&&g.res);
@@ -681,7 +751,8 @@ function analyse(k){
 
   plus.sort((a,b)=>b.w-a.w); minus.sort((a,b)=>b.w-a.w);
   const rank=LEAGUES[k].table.findIndex(r=>r[0]===US)+1;
-  return {plus,minus,focus:minus.filter(m=>m.f).slice(0,3),rank,n:LEAGUES[k].table.length,me,rg:me.rg};
+  const lead=LEAGUES[k].table[0];
+  return {plus,minus,focus:minus.filter(m=>m.f).slice(0,3),rank,n:LEAGUES[k].table.length,me,rg:me.rg,rows,nT:n,leader:lead&&lead[0]!==US?[sn(lead[0]),lead[7]]:null};
 }
 
 function viewAnalysis(){
@@ -692,7 +763,11 @@ function viewAnalysis(){
   const m=A.me;
   const lead=A.plus[0], weak=A.minus[0];
   html+=`<div class="board ana-sum"><span class="lg" style="align-self:flex-start">Kurz gesagt</span>
-    <p class="sum">Platz ${A.rank} von ${A.n}, ${m.w} ${m.w===1?"Sieg":"Siege"}, ${m.x} Remis, ${m.l} ${m.l===1?"Niederlage":"Niederlagen"}.${lead?` Größte Stärke: <b>${esc(lead.t)}</b>.`:""}${weak?` Größte Baustelle: <b>${esc(weak.t)}</b>.`:""}</p></div></section>`;
+    <p class="sum">Platz ${A.rank} von ${A.n}, ${m.w} ${m.w===1?"Sieg":"Siege"}, ${m.x} Remis, ${m.l} ${m.l===1?"Niederlage":"Niederlagen"}.${A.leader?` Tabellenführer ist ${esc(A.leader[0])} (${esc(A.leader[1])} Punkte).`:" Tabellenführer!"}${lead?` Größte Stärke: <b>${esc(lead.t)}</b>.`:""}${weak?` Größte Baustelle: <b>${esc(weak.t)}</b>.`:""}</p></div></section>`;
+  html+=`<section class="sec"><h2>Im Vergleich mit der Liga</h2>
+    <div class="tbl-wrap"><table class="cmpt"><thead><tr><th>Wert</th><th>HC VG</th><th>Liga-Ø</th><th>Bestes anderes Team</th></tr></thead><tbody>${
+      A.rows.map(r=>`<tr><td>${esc(r.l)}<small>Platz ${r.rk} von ${A.nT}${r.lg?" · weniger ist besser":""}</small></td><td class="me">${r.me}</td><td>${r.avg}</td><td>${r.best}<small>${esc(r.bn)}</small></td></tr>`).join("")
+    }</tbody></table></div></section>`;
   const card=(it,cls)=>`<div class="ai ${cls}"><span class="ic" aria-hidden="true">${cls==="pos"?"✓":"!"}</span><div><b>${esc(it.t)}</b><p>${it.x}</p></div></div>`;
   html+=`<section class="sec"><h2>Das zeichnet die Mannschaft aus</h2><div class="ais">${A.plus.map(i=>card(i,"pos")).join("")||'<div class="empty">Noch keine klaren Stärken in den Zahlen – dafür braucht es mehr Spiele.</div>'}</div></section>`;
   html+=`<section class="sec"><h2>Hier ist noch Luft nach oben</h2><div class="ais">${A.minus.map(i=>card(i,"neg")).join("")||'<div class="empty">Die Zahlen zeigen keine echte Schwachstelle. Weiter so!</div>'}</div></section>`;
