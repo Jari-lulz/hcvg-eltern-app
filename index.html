@@ -48,10 +48,10 @@ header h1{font-size:clamp(16px,5vw,26px);white-space:nowrap;overflow:hidden;text
 header .eyebrow{font-size:10.5px;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header .logo{width:42px;height:42px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
-figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/6.2;cursor:pointer;max-width:100%;background:var(--court)}
+figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/5.3;cursor:pointer;max-width:100%;background:var(--court)}
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
-.hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
+.hero .cap{position:absolute;left:16px;right:16px;bottom:10px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
 .hero .cap b{font:800 clamp(17px,5.7vw,32px)/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .hero .cap b i,.hero .cap b em{font-style:normal;display:inline-block}
 .hero .cap b em{color:var(--tape)}
@@ -125,7 +125,7 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .brow{flex-wrap:nowrap;gap:6px}
 .brow .btn{flex:1 1 auto;justify-content:center;padding:9px 8px;font-size:13px;white-space:nowrap}
 /* Kompakte Spielkarte auf der Startseite */
-.board.nc{padding:12px 14px;gap:8px}
+.board.nc{padding:11px 14px;gap:7px}
 /* Kaderübersicht */
 .kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .kp2{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
@@ -140,8 +140,10 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .nc .count{font-size:13px;padding:5px 8px;white-space:nowrap}
 .nc .times>div{padding:5px 10px;flex-wrap:nowrap;align-items:center;gap:8px;border-radius:10px}
 .nc .times small{flex-basis:auto;font-size:11px}
-.nc .times b{font-size:24px;line-height:1}
-.nc .team{font-size:18px}
+.nc .times b{font-size:20px;line-height:1}
+.nc .times span{font-size:12px}
+.nc .team{font-size:22px;line-height:1}
+.nc .vs{font-size:13px}
 .nc .hall{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nc .hall b{display:inline}
 .hall b{display:block;font-weight:600}
@@ -363,7 +365,7 @@ tr.mine td:first-child{color:var(--ink)}
     </div>
   </div>
 
-  <main id="view" class="wrap" style="gap:16px"></main>
+  <main id="view" class="wrap" style="gap:12px"></main>
 
   <p class="note" id="stand"></p>
 </div>
@@ -579,13 +581,13 @@ function nextCard(k){
   const home=g.home===US;
   // kompakte Karte: Kopfzeile mit Datum, Treff/Anwurf in einer Zeile, Halle einzeilig
   const times = g.time
-    ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b></div><div><small>Anwurf</small><b>${esc(g.time)}</b></div></div>`
+    ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b><span>Uhr</span></div><div><small>Anwurf</small><b>${esc(g.time)}</b><span>Uhr</span></div></div>`
     : `<div class="times"><div><small>Anwurf</small><b>offen</b></div></div>`;
   return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend">
     <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span><span class="count">${countdown(g.dt)}</span></div>
     ${times}
-    <div class="match"><div class="team ${home?"us":""}">${esc(sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(sn(g.away))}</div></div>
-    <div class="hall"><b>${home?"Heimspiel":"Auswärts"}</b> · ${esc(hallName(g.loc))}${hallCity(g.loc)?", "+esc(hallCity(g.loc).replace(/^d{5}s*/,"")):""}${g.note?` · ${esc(g.note)}`:""}</div>
+    <div class="match"><div class="team ${home?"us":""}">${esc(home?US:sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(home?sn(g.away):US)}</div></div>
+    <div class="hall"><b>${home?"Heimspiel":"Auswärts"}</b> · ${esc(hallName(g.loc))}${hallCity(g.loc)?", "+esc(hallCity(g.loc).replace(/^\d{5}\s*/,"")):""}${g.note?` · ${esc(g.note)}`:""}</div>
     <div class="row brow">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live</a>${FEATURE_GEGNER&&!/Platzhalter/.test(home?g.away:g.home)?`<button class="btn ghost" data-gegner="${k}">🔎 Gegner-Check</button>`:""}</div>
   </section>`;
 }
