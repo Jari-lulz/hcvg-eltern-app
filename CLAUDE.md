@@ -2,7 +2,7 @@
 
 Mannschafts-App für die weibliche D- und C-Jugend des HC Vorpommern-Greifswald (Saison 2026/27, BHV Ost).
 
-- Name in der App: „Mannschafts-App“. Adresse und Repo heißen weiter `hcvg-eltern-app`, damit geteilte Links und Kalender-Abos funktionieren. Kalender-UIDs (`@hcvg-eltern-app`) nicht ändern, sonst entstehen doppelte Termine.
+- Name: „Mannschafts-App“. Adresse: https://jari-lulz.github.io/hcvg-mannschafts-app/ (Repo `Jari-lulz/hcvg-mannschafts-app`, bis 11/2026 `hcvg-eltern-app`). Der lokale Ordner heißt noch `hcvg-eltern-app`. Kalender-UIDs (`@hcvg-eltern-app`) nicht ändern, sonst entstehen doppelte Termine.
 
 ## Aufbau
 - `index.html`: die App (HTML, CSS, JS in einer Datei, keine Build-Tools).

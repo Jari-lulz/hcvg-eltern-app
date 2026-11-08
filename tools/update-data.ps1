@@ -267,7 +267,7 @@ $out.hallInfo = $HallInfo
 # ---------- Kalender zum Abonnieren (kalender-c.ics, kalender-d.ics, kalender.ics) ----------
 # Termin beginnt beim Treff (1 Stunde vor Anwurf) und endet ca. 30 Minuten nach Spielende.
 $GameLen = @{ D = 40; C = 50 }
-$AppUrl  = 'https://jari-lulz.github.io/hcvg-eltern-app/'
+$AppUrl  = 'https://jari-lulz.github.io/hcvg-mannschafts-app/'
 $ae = [char]0xE4
 
 function IcsText([string]$s) { return ($s -replace '\\', '\\\\' -replace ';', '\;' -replace ',', '\,' -replace "`r?`n", '\n') }
