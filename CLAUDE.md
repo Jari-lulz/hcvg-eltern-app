@@ -1,6 +1,8 @@
-# HCVG Eltern-App
+# HCVG Mannschafts-App
 
-Eltern-App für die weibliche D- und C-Jugend des HC Vorpommern-Greifswald (Saison 2026/27, BHV Ost).
+Mannschafts-App für die weibliche D- und C-Jugend des HC Vorpommern-Greifswald (Saison 2026/27, BHV Ost).
+
+- Name in der App: „Mannschafts-App“. Adresse und Repo heißen weiter `hcvg-eltern-app`, damit geteilte Links und Kalender-Abos funktionieren. Kalender-UIDs (`@hcvg-eltern-app`) nicht ändern, sonst entstehen doppelte Termine.
 
 ## Aufbau
 - `index.html`: die App (HTML, CSS, JS in einer Datei, keine Build-Tools).

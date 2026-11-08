@@ -19,7 +19,7 @@ $Leagues = [ordered]@{
 
 function Get-Page([string]$url) {
   Start-Sleep -Milliseconds 400   # nuLiga schonen
-  $r = Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{ 'User-Agent' = 'HCVG-Eltern-App (Spielplan-Update)' }
+  $r = Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{ 'User-Agent' = 'HCVG-Mannschafts-App (Spielplan-Update)' }
   $text = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())
   return ($text -replace '\s+', ' ')
 }
@@ -190,7 +190,7 @@ $Us = 'HC Vorpommern-Greifswald'
 function Get-Scorer30([string]$mid, [bool]$usHome) {
   try {
     Start-Sleep -Milliseconds 300
-    $r = Invoke-WebRequest -UseBasicParsing "https://hbde-live.liga.nu/nuScoreLiveRestBackend/api/1/events/$mid" -Headers @{ 'User-Agent' = 'HCVG-Eltern-App (Spielplan-Update)' }
+    $r = Invoke-WebRequest -UseBasicParsing "https://hbde-live.liga.nu/nuScoreLiveRestBackend/api/1/events/$mid" -Headers @{ 'User-Agent' = 'HCVG-Mannschafts-App (Spielplan-Update)' }
     $e = ([Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())) | ConvertFrom-Json
     foreach ($x in ($e.events | Sort-Object idx)) {
       if ($x.event -ne 4 -and $x.event -ne 5) { continue }        # 4 = Tor, 5 = 7m-Tor
@@ -371,7 +371,7 @@ $tz = @('BEGIN:VTIMEZONE', 'TZID:Europe/Berlin',
   'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
   'END:VTIMEZONE') -join "`r`n"
 function Write-Ics([string]$file, [string]$name, $evs) {
-  $head = @('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//HCVG Eltern-App//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+  $head = @('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//HCVG Mannschafts-App//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
     "X-WR-CALNAME:$name", 'X-WR-TIMEZONE:Europe/Berlin', 'REFRESH-INTERVAL;VALUE=DURATION:PT6H', 'X-PUBLISHED-TTL:PT6H') -join "`r`n"
   $body = @($head, $tz) + $evs + @('END:VCALENDAR')
   [IO.File]::WriteAllText((Join-Path $Root $file), (($body -join "`r`n") + "`r`n"), (New-Object Text.UTF8Encoding $false))
