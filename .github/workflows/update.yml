@@ -53,6 +53,8 @@ jobs:
         run: |
           mkdir -p _site
           cp -r index.html data.js img *.ics _site/
+          # Versionsnummer an data.js haengen, damit Browser keine alten Daten zeigen
+          sed -i "s|src=\"data.js\"|src=\"data.js?v=${GITHUB_RUN_ID}\"|" _site/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
