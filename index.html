@@ -62,8 +62,8 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 /* Unter-Navigation je Liga */
 #view{width:100%}
 #view,#view>*{min-width:0}
-.sub{display:flex;gap:6px;border-bottom:2px solid var(--line);min-width:0}
-.sub button{font:700 15px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;background:none;border:0;color:var(--muted);padding:10px 8px 12px;margin-bottom:-2px;border-bottom:3px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.sub{display:flex;gap:2px;border-bottom:2px solid var(--line);min-width:0}
+.sub button{flex:1 1 auto;justify-content:center;font:700 15px/1 var(--display);text-transform:uppercase;letter-spacing:.03em;background:none;border:0;color:var(--muted);padding:12px 4px;margin-bottom:-2px;border-bottom:3px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .sub button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--tape)}
 .sub .ld{width:8px;height:8px;border-radius:50%;background:var(--loss)}
 .sub a{margin-left:auto;align-self:center;flex:none;font:700 14px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);margin-bottom:6px}
@@ -131,7 +131,12 @@ details[open]>summary .chev{transform:rotate(180deg)}
 .mom h4{font:700 14px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0}
 .mg{display:grid;grid-template-columns:auto 1fr;gap:4px 6px}
 .ax{display:flex;flex-direction:column;justify-content:space-between;font:600 11px/1 var(--body);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
-.mom svg{width:100%;height:84px;display:block;min-width:0}
+.plot{position:relative;min-width:0;border-radius:6px;overflow:hidden}
+.mom svg{width:100%;height:120px;display:block}
+.zt{position:absolute;left:6px;font:700 11px/1 var(--body);letter-spacing:.02em;padding:2px 4px;border-radius:4px;background:color-mix(in srgb,var(--surface) 80%,transparent);pointer-events:none}
+.zt.up{top:4px;color:var(--win)} .zt.dn{bottom:4px;color:var(--loss)}
+.zt.mid{right:6px;left:auto;top:50%;transform:translateY(-120%);color:var(--muted);font-weight:600}
+.ax .z{color:var(--ink);font-weight:800}
 .mom .lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .mx{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
 .mx b{color:var(--ink);font-weight:600}
@@ -349,7 +354,7 @@ function gameRow(g,{showLg=false}={}){
 /* Spieldetails: Halbzeit, Schiris, Torschützinnen, Spielverlauf */
 let svgId=0;
 function momentum(r,len,persp,upName,downName){
-  const T=len*60, W=300, H=72; let d=0; const pts=[[0,0]];
+  const T=len*60, W=300, H=110; let d=0; const pts=[[0,0]];
   for(const [s,side,c] of r.ev||[]){ if(c==="g"||c==="7g"){ d+= side===persp?1:-1; pts.push([Math.min(s,T),d]); } }
   if(pts.length<2) return "";
   const max=Math.max(3,...pts.map(p=>Math.abs(p[1])));
@@ -357,17 +362,22 @@ function momentum(r,len,persp,upName,downName){
   let line=`M0 ${y(0)}`; for(const [s,v] of pts.slice(1)) line+=` H${x(s)} V${y(v)}`; line+=` H${W}`;
   const area=line+` V${y(0)} H0 Z`; const id="m"+(++svgId);
   return `<div class="mom"><h4>Spielverlauf: Wer lag wie weit vorn?</h4>
-  <div class="mg"><div class="ax" aria-hidden="true"><span>+${max}</span><span>0</span><span>+${max}</span></div>
+  <div class="mg"><div class="ax" aria-hidden="true"><span>+${max}</span><span class="z">0</span><span>+${max}</span></div>
+  <div class="plot">
   <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Verlauf der Tordifferenz">
     <defs><clipPath id="${id}a"><rect x="0" y="0" width="${W}" height="${H/2}"/></clipPath><clipPath id="${id}b"><rect x="0" y="${H/2}" width="${W}" height="${H/2}"/></clipPath></defs>
-    <path d="${area}" clip-path="url(#${id}a)" fill="var(--win)" opacity=".22"/>
-    <path d="${area}" clip-path="url(#${id}b)" fill="var(--loss)" opacity=".22"/>
-    <line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>
-    <line x1="${W/2}" x2="${W/2}" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".6"/>
-    <path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    <rect x="0" y="0" width="${W}" height="${H/2}" fill="var(--win)" opacity=".08"/>
+    <rect x="0" y="${H/2}" width="${W}" height="${H/2}" fill="var(--loss)" opacity=".08"/>
+    <path d="${area}" clip-path="url(#${id}a)" fill="var(--win)" opacity=".35"/>
+    <path d="${area}" clip-path="url(#${id}b)" fill="var(--loss)" opacity=".35"/>
+    <line x1="${W/2}" x2="${W/2}" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".7"/>
+    <line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="var(--ink)" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".7"/>
+    <path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
   </svg>
+  <span class="zt up">▲ ${esc(upName)} führt</span><span class="zt mid">Mittellinie = Gleichstand</span><span class="zt dn">▼ ${esc(downName)} führt</span>
+  </div>
   <span></span><div class="lbl"><span>Anpfiff</span><span>Halbzeit</span><span>${len}. Min.</span></div></div>
-  <p class="mx">Die Linie zeigt den <b>Torabstand</b> im Laufe des Spiels. Jede Stufe ist ein Tor. Ist die Linie im <b class="up">grünen Bereich oben</b>, führt ${esc(upName)}. Ist sie im <b class="dn">roten Bereich unten</b>, führt ${esc(downName)}. Auf der Mittellinie steht es unentschieden. Je weiter weg von der Mitte, desto größer der Vorsprung.</p></div>`;
+  <p class="mx">Die schwarze Linie zeigt den <b>Torabstand</b> im Laufe des Spiels, jede Stufe ist ein Tor. Im <b class="up">grünen Bereich oben</b> führt ${esc(upName)}, im <b class="dn">roten Bereich unten</b> ${esc(downName)}. Je weiter weg von der Mittellinie, desto größer der Vorsprung. Die Zahlen links zeigen, wie viele Tore das sind.</p></div>`;
 }
 function scorerList(name,s){
   const list=(s?.p||[]).filter(p=>p[3]>0).sort((a,b)=>b[3]-a[3]);
@@ -468,33 +478,43 @@ function nextCard(k){
 
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
-    <figcaption class="cap"><b>Ein Team. <em>Ein Kreis.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
+    <figcaption class="cap"><b>Power. Zusammenhalt. <em>Vertrauen.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
   return hero + nextCard("C") + nextCard("D") + trainingTile();
 }
 
-const st = { filterMine:{D:false,C:false}, sub:{D:"spiele",C:"spiele"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cmp:{D:"gf",C:"gf"} };
-try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["spiele","stat"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
+const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cmp:{D:"gf",C:"gf"} };
+try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["tab","spiele","erg","stat"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
 
 function subNav(k){
   const b=(id,label,extra="")=>`<button role="tab" data-sub="${id}" aria-selected="${st.sub[k]===id}">${extra}${label}</button>`;
-  return `<div class="sub"><div role="tablist" aria-label="Bereich" style="display:flex;gap:6px">${b("spiele","Spiele")}${b("stat","Statistik")}</div><a href="${liveUrl(LEAGUES[k].group)}" target="_blank" rel="noopener"><span class="ld" aria-hidden="true"></span>Live-Ticker</a></div>`;
+  return `<div class="sub" role="tablist" aria-label="Bereich">${b("tab","Tabelle")}${b("spiele","Spiele")}${b("erg","Ergebnisse")}${b("stat","Statistik")}</div>`;
 }
 
 function viewLeague(k){
-  return subNav(k) + (st.sub[k]==="stat"?viewStats(k):viewGames(k));
+  const s=st.sub[k];
+  return subNav(k) + (s==="stat"?viewStats(k):s==="spiele"?viewUpcoming(k):s==="erg"?viewResults(k):viewTable(k));
 }
 
-function viewGames(k){
-  const L=LEAGUES[k];
+function filterChips(k){
+  return `<div class="chips" role="group" aria-label="Filter"><button class="chip" aria-pressed="${!st.filterMine[k]}" data-f="all">Alle</button><button class="chip" aria-pressed="${st.filterMine[k]}" data-f="us">Nur HC VG</button></div>`;
+}
+function viewUpcoming(k){
+  const L=LEAGUES[k], games=ALL.filter(g=>g.lg===k&&(!st.filterMine[k]||g.mine));
+  return `<section class="sec"><div class="sechead"><h2>Kommende Spiele</h2>${filterChips(k)}</div>
+    <div class="list">${upcoming(games).map(g=>gameRow(g)).join("")||'<div class="empty">Keine Spiele.</div>'}</div>
+    <a class="btn line" style="align-self:flex-start" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live-Ticker der Liga öffnen</a></section>`;
+}
+function viewResults(k){
   const games=ALL.filter(g=>g.lg===k&&(!st.filterMine[k]||g.mine));
+  return `<section class="sec"><div class="sechead"><h2>Ergebnisse</h2>${filterChips(k)}</div>
+    <p class="note" style="margin:0">Neueste zuerst. Spiel antippen für Halbzeit, Schiris, Torschützinnen und Spielverlauf.</p>
+    <div class="list">${played(games).map(g=>gameRow(g)).join("")||'<div class="empty">Noch keine Ergebnisse.</div>'}</div></section>`;
+}
+function viewTable(k){
+  const L=LEAGUES[k];
   const t=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Mannschaft</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>+/-</th><th>Pkt</th></tr></thead><tbody>${
     L.table.map((r,i)=>`<tr class="${r[0]===US?"mine":""}"><td>${i+1}</td><td>${esc(sn(r[0]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${esc(r[5])}</td><td>${r[6]>0?"+":""}${r[6]}</td><td class="pts">${esc(r[7])}</td></tr>`).join("")}</tbody></table></div>`;
-  return `
-  <section class="sec"><div class="sechead"><h2>Tabelle</h2><a class="note" href="${nuUrl(L.group)}" target="_blank" rel="noopener" style="color:var(--muted)">auf nuLiga</a></div>${t}</section>
-  <section class="sec"><div class="sechead"><h2>Kommende Spiele</h2>
-    <div class="chips" role="group" aria-label="Filter"><button class="chip" aria-pressed="${!st.filterMine[k]}" data-f="all">Alle</button><button class="chip" aria-pressed="${st.filterMine[k]}" data-f="us">Nur HC VG</button></div></div>
-    <div class="list">${upcoming(games).map(g=>gameRow(g)).join("")||'<div class="empty">Keine Spiele.</div>'}</div></section>
-  <section class="sec"><div class="sechead"><h2>Ergebnisse</h2><span class="note">Antippen für Details</span></div><div class="list">${played(games).map(g=>gameRow(g)).join("")||'<div class="empty">Noch keine Ergebnisse.</div>'}</div></section>`;
+  return `<section class="sec"><div class="sechead"><h2>Tabelle</h2><a class="note" href="${nuUrl(L.group)}" target="_blank" rel="noopener" style="color:var(--muted)">auf nuLiga</a></div>${t}</section>`;
 }
 
 function viewStats(k){
