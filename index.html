@@ -43,11 +43,36 @@ header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
-.hero .cap b{font:800 30px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
-.hero .cap b em{font-style:normal;color:var(--tape)}
+.hero .cap b{font:800 clamp(18px,6.4vw,32px)/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.hero .cap b i,.hero .cap b em{font-style:normal;display:inline-block}
+.hero .cap b em{color:var(--tape)}
+
+/* Animationen – nur wenn das Handy keine reduzierte Bewegung wünscht */
+@media (prefers-reduced-motion:no-preference){
+  #view.anim>*{animation:rise .5s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(var(--i,0)*70ms)}
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}}
+  #view.anim .hero img{animation:kb 2.4s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes kb{from{transform:scale(1.14)}}
+  #view.anim .hero .cap b>*{animation:pop .55s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(.35s + var(--w)*.18s)}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.85)}}
+  .count{animation:beat 2.6s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  .cake .em{display:inline-block;animation:wiggle 2.2s ease-in-out infinite;transform-origin:50% 90%}
+  @keyframes wiggle{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-12deg)}80%{transform:rotate(10deg)}90%{transform:rotate(-5deg)}}
+  #view.anim .hb .fill,#view.anim .cake .nr .bar i,#view.anim .gbar s{animation:growx .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:left center}
+  @keyframes growx{from{transform:scaleX(0)}}
+  #view.anim .col .bar{animation:growy .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:bottom center}
+  @keyframes growy{from{transform:scaleY(0)}}
+  details[open] .gx{animation:rise .35s ease both}
+  details[open] .mom path.ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.4s ease-out .15s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .seg button{transition:background-color .25s,color .25s}
+  .btn,.chip,.mapbtn{transition:transform .15s}
+  .btn:active,.chip:active,.mapbtn:active{transform:scale(.96)}
+}
 .hero .cap span{font:600 13px/1.3 var(--body);opacity:.9}
 .eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-h1{font:800 34px/1 var(--display);letter-spacing:.01em;margin:0;text-transform:uppercase;text-wrap:balance}
+h1{font:800 clamp(21px,6.6vw,34px)/1 var(--display);letter-spacing:.01em;margin:0;text-transform:uppercase;text-wrap:balance}
 h1 span{color:var(--court)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h1 span{color:var(--tape)}}
 :root[data-theme="dark"] h1 span{color:var(--tape)}
@@ -253,8 +278,8 @@ tr.mine td:first-child{color:var(--ink)}
   <header>
     <img class="logo" src="img/logo.webp" alt="Wappen HC Vorpommern-Greifswald" width="56" height="56">
     <div class="ht">
-      <div class="eyebrow">HC Vorpommern-Greifswald · weibliche Jugend</div>
-      <h1>Spieltag <span>kompakt</span></h1>
+      <h1>HC Vorpommern-<span>Greifswald</span></h1>
+      <div class="eyebrow">Weibliche Jugend C &amp; D</div>
     </div>
   </header>
 
@@ -408,7 +433,7 @@ function momentum(r,len,persp,upName,downName){
     <path d="${area}" clip-path="url(#${id}b)" fill="var(--loss)" opacity=".35"/>
     <line x1="${W/2}" x2="${W/2}" y1="0" y2="${H}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" opacity=".7"/>
     <line x1="0" x2="${W}" y1="${H/2}" y2="${H/2}" stroke="var(--ink)" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".7"/>
-    <path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+    <path class="ln" d="${line}" pathLength="1" fill="none" stroke="var(--ink)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
   </svg>
   <span class="zt up">▲ ${esc(upName)} führt</span><span class="zt mid">Mittellinie = Gleichstand</span><span class="zt dn">▼ ${esc(downName)} führt</span>
   </div>
@@ -546,7 +571,7 @@ function cakeTile(){
 
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
-    <figcaption class="cap"><b>Power. Vertrauen. <em>Teamwork.</em></b><span>Weibliche D- &amp; C-Jugend · Saison 2026/27</span></figcaption></figure>`;
+    <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Vertrauen.</i> <em style="--w:2">Teamwork.</em></b><span>Gemeinsam auf dem Feld, gemeinsam am Spielfeldrand</span></figcaption></figure>`;
   return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile();
 }
 
@@ -800,22 +825,27 @@ function viewAnalysis(){
 let current="us";
 try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C","ana"].includes(s))current=s;const a=localStorage.getItem("hcvg-ana");if(a==="C"||a==="D")st.ana=a;}catch(e){}
 function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-ana",st.ana);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
+// Einblend-Animation nur beim Wechsel von Seite/Unterreiter, nicht bei Filter- oder Sortierknöpfen
+let animNext=true;
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
   view.innerHTML = current==="us"?viewUs():current==="ana"?viewAnalysis():viewLeague(current);
+  view.classList.remove("anim");
+  if(animNext){ [...view.children].forEach((el,i)=>el.style.setProperty("--i",Math.min(i,8))); void view.offsetWidth; view.classList.add("anim"); }
+  animNext=false;
   document.getElementById("stand").textContent=`Datenstand: ${DATA.updated} · Quelle: nuLiga HVMV (BHV Ost 2026/27). Ohne Gewähr – kurzfristige Verlegungen bitte beim Trainer erfragen.`;
 }
-document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();render();window.scrollTo({top:0});}));
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();animNext=true;render();window.scrollTo({top:0});}));
 view.addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
   const k=current;
-  if(b.dataset.go){const [lg,sub]=b.dataset.go.split(":");current=lg;st.sub[lg]=sub;save();render();window.scrollTo({top:0});return;}
-  if(b.dataset.sub){st.sub[k]=b.dataset.sub;save();render();return;}
+  if(b.dataset.go){const [lg,sub]=b.dataset.go.split(":");current=lg;st.sub[lg]=sub;save();animNext=true;render();window.scrollTo({top:0});return;}
+  if(b.dataset.sub){st.sub[k]=b.dataset.sub;save();animNext=true;render();return;}
   if(b.dataset.f){st.filterMine[k]=b.dataset.f==="us";render();return;}
   if(b.dataset.sort){st.sort[k]=b.dataset.sort;render();return;}
   if(b.dataset.top){st.topAll[k]=!st.topAll[k];render();return;}
   if(b.dataset.topus){st.topUs[k]=b.dataset.topus==="1";render();return;}
-  if(b.dataset.ana){st.ana=b.dataset.ana;save();render();return;}
+  if(b.dataset.ana){st.ana=b.dataset.ana;save();animNext=true;render();return;}
   if(b.dataset.cmp){st.cmp[k]=b.dataset.cmp;render();return;}
 });
 render();
