@@ -38,15 +38,17 @@ img{max-width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-header{padding-top:18px;display:flex;align-items:center;gap:12px}
-.theme{margin-left:auto;flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{padding-top:10px;display:flex;align-items:center;gap:10px}
+.theme{margin-left:auto;flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
 .theme svg{width:22px;height:22px}
 .theme:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
-header .ht{display:flex;flex-direction:column;gap:4px;min-width:0}
-header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+header .ht{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+header h1{font-size:clamp(16px,5vw,26px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .eyebrow{font-size:10.5px;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .logo{width:42px;height:42px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
-figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/8;max-width:100%;background:var(--court)}
+figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/6.2;cursor:pointer;max-width:100%;background:var(--court)}
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
@@ -122,6 +124,26 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .hall{font-size:13px;opacity:.92;line-height:1.35}
 .brow{flex-wrap:nowrap;gap:6px}
 .brow .btn{flex:1 1 auto;justify-content:center;padding:9px 8px;font-size:13px;white-space:nowrap}
+/* Kompakte Spielkarte auf der Startseite */
+.board.nc{padding:12px 14px;gap:8px}
+/* Kaderübersicht */
+.kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.kp2{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.kp2 div{display:flex;flex-direction:column;min-width:0}
+.kp2 b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp2 .note{font-size:12px}
+.kn2{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ours);color:var(--on-ours);font:800 16px/1 var(--display)}
+.hero .cap span u{text-decoration:none;color:var(--tape);font-weight:700;white-space:nowrap}
+figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+.nc .when{flex-wrap:nowrap;align-items:center}
+.nc .date{flex:1;font:800 19px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc .count{font-size:13px;padding:5px 8px;white-space:nowrap}
+.nc .times>div{padding:5px 10px;flex-wrap:nowrap;align-items:center;gap:8px;border-radius:10px}
+.nc .times small{flex-basis:auto;font-size:11px}
+.nc .times b{font-size:24px;line-height:1}
+.nc .team{font-size:18px}
+.nc .hall{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc .hall b{display:inline}
 .hall b{display:block;font-weight:600}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:7px;font:600 14px/1 var(--body);text-decoration:none;border-radius:10px;padding:11px 14px;border:0;cursor:pointer}
@@ -324,10 +346,10 @@ tr.mine td:first-child{color:var(--ink)}
 
 <div class="wrap">
   <header>
-    <img class="logo" src="img/logo.webp" alt="Wappen HC Vorpommern-Greifswald" width="56" height="56">
+    <img class="logo" src="img/logo.webp" alt="Wappen HC Vorpommern-Greifswald" width="42" height="42">
     <div class="ht">
       <h1>HC Vorpommern-<span>Greifswald</span></h1>
-      <div class="eyebrow" style="line-height:1.35">Mannschafts-App<br>Weibliche Jugend C &amp; D</div>
+      <div class="eyebrow">Mannschafts-App · weibl. Jugend C &amp; D</div>
     </div>
     <button class="theme" id="theme" type="button" aria-label="Hell- oder Dunkelmodus"></button>
   </header>
@@ -341,7 +363,7 @@ tr.mine td:first-child{color:var(--ink)}
     </div>
   </div>
 
-  <main id="view" class="wrap" style="gap:22px"></main>
+  <main id="view" class="wrap" style="gap:16px"></main>
 
   <p class="note" id="stand"></p>
 </div>
@@ -553,17 +575,17 @@ const hhmm = d => String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()
 function nextCard(k){
   const L=LEAGUES[k];
   const g=upcoming(ALL.filter(x=>x.mine&&x.lg===k)).find(x=>x.dt);
-  if(!g) return `<section class="board" aria-label="Nächstes Spiel ${k}-Jugend"><div class="when"><span class="lg">${k}-Jugend</span></div><p class="hall" style="margin:0">Zurzeit ist kein Spiel angesetzt.</p></section>`;
+  if(!g) return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend"><div class="when"><span class="lg">${k}-Jugend</span></div><p class="hall" style="margin:0">Zurzeit ist kein Spiel angesetzt.</p></section>`;
   const home=g.home===US;
+  // kompakte Karte: Kopfzeile mit Datum, Treff/Anwurf in einer Zeile, Halle einzeilig
   const times = g.time
-    ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b><span>Uhr</span></div><div><small>Anwurf</small><b>${esc(g.time)}</b><span>Uhr</span></div></div>`
-    : `<div class="times"><div><small>Anwurf</small><b style="font-size:22px">Uhrzeit offen</b></div></div>`;
-  return `<section class="board" aria-label="Nächstes Spiel ${k}-Jugend">
-    <div class="when"><span class="lg">${k}-Jugend</span><span class="count">${countdown(g.dt)}</span></div>
-    <div class="date">${WDL[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</div>
+    ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b></div><div><small>Anwurf</small><b>${esc(g.time)}</b></div></div>`
+    : `<div class="times"><div><small>Anwurf</small><b>offen</b></div></div>`;
+  return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend">
+    <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span><span class="count">${countdown(g.dt)}</span></div>
     ${times}
     <div class="match"><div class="team ${home?"us":""}">${esc(sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(sn(g.away))}</div></div>
-    <div class="hall"><b>${home?"Heimspiel · ":"Auswärts · "}${esc(hallName(g.loc))}</b>${esc(hallAddr(g.loc))}${g.note?`<br>${esc(g.note)}`:""}</div>
+    <div class="hall"><b>${home?"Heimspiel":"Auswärts"}</b> · ${esc(hallName(g.loc))}${hallCity(g.loc)?", "+esc(hallCity(g.loc).replace(/^d{5}s*/,"")):""}${g.note?` · ${esc(g.note)}`:""}</div>
     <div class="row brow">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live</a>${FEATURE_GEGNER&&!/Platzhalter/.test(home?g.away:g.home)?`<button class="btn ghost" data-gegner="${k}">🔎 Gegner-Check</button>`:""}</div>
   </section>`;
 }
@@ -638,9 +660,21 @@ function calTile(){
   </section>`;
 }
 
+// Kader: alle Spielerinnen, die in einem Spielbericht stehen, je Jugend nach Rückennummer
+function viewKader(){
+  let html=`<section class="sec"><button class="btn line" data-back="1" style="align-self:flex-start">← Zurück</button><h2>Unsere Mannschaften</h2></section>`;
+  for(const k of ["D","C"]){
+    const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
+    html+=`<section class="sec"><div class="sechead"><h2>${k}-Jugend</h2><span class="note">${ps.length} Spielerinnen</span></div>
+      <div class="kader">${ps.map(p=>`<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span></div></div>`).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
+  }
+  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene.</p>`;
+  return html;
+}
+
 function viewUs(){
-  const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
-    <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg</span></figcaption></figure>`;
+  const hero=`<figure class="hero" style="margin:0" data-kader="1" role="button" tabindex="0" aria-label="Mannschaft anzeigen"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
+    <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg · <u>Mannschaft ansehen ›</u></span></figcaption></figure>`;
   return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile() + calTile();
 }
 
@@ -1054,15 +1088,19 @@ function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setIte
 let animNext=true;
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
-  view.innerHTML = current==="us"?viewUs():current==="ana"?viewAnalysis():viewLeague(current);
+  view.innerHTML = current==="us"?viewUs():current==="kader"?viewKader():current==="ana"?viewAnalysis():viewLeague(current);
   view.classList.remove("anim");
   if(animNext){ [...view.children].forEach((el,i)=>el.style.setProperty("--i",Math.min(i,8))); void view.offsetWidth; view.classList.add("anim"); }
   animNext=false;
   document.getElementById("stand").textContent=`Datenstand: ${DATA.updated} · Quelle: nuLiga HVMV (BHV Ost 2026/27). Ohne Gewähr – kurzfristige Verlegungen bitte beim Trainer erfragen.`;
 }
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();animNext=true;render();window.scrollTo({top:0});}));
+const openKader=()=>{current="kader";animNext=true;render();window.scrollTo({top:0});};
+view.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.closest("[data-kader]")){e.preventDefault();openKader();} });
 view.addEventListener("click",e=>{
+  if(e.target.closest("[data-kader]")){openKader();return;}
   const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.back){current="us";animNext=true;render();window.scrollTo({top:0});return;}
   const k=current;
   if(b.dataset.go){const [lg,sub]=b.dataset.go.split(":");current=lg;st.sub[lg]=sub;save();animNext=true;render();window.scrollTo({top:0});return;}
   if(b.dataset.sub){st.sub[k]=b.dataset.sub;save();animNext=true;render();return;}
