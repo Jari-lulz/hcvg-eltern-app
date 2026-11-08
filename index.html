@@ -135,6 +135,15 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .train .where{font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .train .where>span{min-width:0}
 
+/* Kalender-Abo */
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.cal .top{display:flex;gap:12px;align-items:flex-start}
+.cal .top>svg{width:28px;height:28px;flex:none;color:var(--accent);margin-top:2px}
+.cal .top div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cal .row .btn{flex:1 1 auto;justify-content:center}
+.howto summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.howto p{margin:8px 0 0;font-size:14px}
+
 /* Kuchen-Alarm: kleine Zeile auf der Startseite */
 .cakeline{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--surface);border:2px dashed var(--tape);border-radius:14px;padding:10px 14px}
 .cakeline .em{font-size:30px;line-height:1}
@@ -310,23 +319,8 @@ const TRAINING = {
 };
 
 const US = "HC Vorpommern-Greifswald";
-const HALLS = {
- "8986":["Webasto Arena","Binsenwerderstr. 2, 17033 Neubrandenburg"],
- "9108":["Vogelsanghalle","Grünhufer Bogen 18-20, 18437 Stralsund"],
- "16830":["Sporthalle 1 Schönwalde I","Max-Planck-Straße 9, 17491 Greifswald"],
- "16831":["Mehrzweckhalle Schönwalde II","Ernst-Thälmann-Ring 11, 17491 Greifswald"],
- "16843":["Großsporthalle Wolgast","Hufelandstraße 9, 17438 Wolgast"],
- "16844":["Mehrzweckhalle am Klosterberg","Am Klosterberg, 17087 Altentreptow"],
- "16845":["Sporthalle Gerd Garber","Louis-Fürnberg-Straße, 18356 Barth"],
- "16887":["Karsten-Sarnow-Halle","Arnold-Zweig-Straße 159, 18435 Stralsund"],
- "16889":["Vineta Sportarena","Gewerbegebiet am Betonwerk, 18356 Barth"],
- "16891":["Sporthalle Grimmen Süd-West","Leningrader Straße 24a, 18507 Grimmen"],
- "16897":["Uecker-Sporthalle","Klosterstraße 52, 17309 Pasewalk"],
- "16899":["Sporthalle am Tiefwarensee","Am Tiefwarensee, 17192 Waren (Müritz)"],
- "16902":["Zweifelderhalle Stavenhagen","August-Seidel-Straße, 17153 Stavenhagen"],
- "20169":["Sporthalle am Anger","Geschwister-Scholl-Straße 16/17, 17033 Neubrandenburg"],
- "54549":["Mehrzweckhalle Volkshaus","Baustraße 50, 17389 Anklam"]
-};
+// Hallen mit Adresse: gepflegt in tools/halls.json, vom Update-Skript nach data.js (hallInfo) geschrieben
+const HALLS = window.HCVG_DATA?.hallInfo || {};
 const SHORT = {
  "HC Vorpommern-Greifswald":"HC VG","Stavenhagener SV von 1863":"Stavenhagen","HSV 90 Waren":"Waren",
  "Pasewalker HV":"Pasewalk","SV Fort. 50 Neubrandenburg II":"Neubrandenburg II","HSV Grimmen 1992":"Grimmen",
@@ -577,13 +571,39 @@ function cakeTile(){
   return `<section class="cakeline due" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>${names} ${due.length>1?"bringen":"bringt"} Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c0))}</span></div></section>`;
 }
 
+// Kalender zum Abonnieren – die Dateien erzeugt tools/update-data.ps1
+const CAL_FILES={CD:["kalender.ics","D- und C-Jugend"],C:["kalender-c.ics","C-Jugend"],D:["kalender-d.ics","D-Jugend"]};
+const ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+function calUrls(){
+  const https=new URL(CAL_FILES[st.cal][0],location.href).href, webcal=https.replace(/^https?:/,"webcal:");
+  return {https,webcal,google:"https://calendar.google.com/calendar/r?cid="+encodeURIComponent(webcal)};
+}
+function calTile(){
+  const u=calUrls(), ch=id=>`<button class="chip" data-cal="${id}" aria-pressed="${st.cal===id}">${id==="CD"?"Beide":id+"-Jugend"}</button>`;
+  return `<section class="cal" aria-label="Spiele im Kalender">
+    <div class="top">${ICON_CAL}<div><h2>Spiele in deinen Kalender</h2><span class="note">Alle Spiele mit Treff, Anwurf, Halle und Route. Verlegungen aktualisieren sich von selbst.</span></div></div>
+    <div class="chips" role="group" aria-label="Mannschaft">${ch("CD")}${ch("C")}${ch("D")}</div>
+    <div class="row">
+      <a class="btn primary" href="${u.webcal}">${ICON_CAL} iPhone / iPad</a>
+      <a class="btn line" href="${u.google}" target="_blank" rel="noopener">${ICON_CAL} Google Kalender</a>
+      <button class="btn line" data-copycal="1">Adresse kopieren</button>
+    </div>
+    <details class="howto"><summary>So geht's</summary>
+      <p><b>iPhone / iPad:</b> Knopf antippen und „Abonnieren“ bestätigen. Fertig.</p>
+      <p><b>Android:</b> „Google Kalender“ antippen und im Browser mit deinem Google-Konto „Hinzufügen“ bestätigen. Danach erscheinen die Spiele automatisch in der Kalender-App auf dem Handy. Falls nicht: in der Kalender-App unter Einstellungen den Kalender „HC VG …“ einschalten.</p>
+      <p><b>Andere Kalender</b> (Outlook, Samsung …): „Adresse kopieren“ und dort als Kalender-Abo per Internet-Adresse hinzufügen.</p>
+      <p class="note">Kalender holen Änderungen nicht sofort ab, sondern alle paar Stunden. Ganz aktuell ist immer die App.</p>
+    </details>
+  </section>`;
+}
+
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
     <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Vertrauen.</i> <em style="--w:2">Teamwork.</em></b><span>Gemeinsam auf dem Feld, gemeinsam am Spielfeldrand</span></figcaption></figure>`;
-  return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile();
+  return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile() + calTile();
 }
 
-const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cmp:{D:"gf",C:"gf"} };
+const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cal:"CD", cmp:{D:"gf",C:"gf"} };
 try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["tab","spiele","erg","stat"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
 
 function subNav(k){
@@ -854,6 +874,12 @@ view.addEventListener("click",e=>{
   if(b.dataset.top){st.topAll[k]=!st.topAll[k];render();return;}
   if(b.dataset.topus){st.topUs[k]=b.dataset.topus==="1";render();return;}
   if(b.dataset.ana){st.ana=b.dataset.ana;save();animNext=true;render();return;}
+  if(b.dataset.cal){st.cal=b.dataset.cal;render();return;}
+  if(b.dataset.copycal){
+    const url=calUrls().https, done=t=>{b.textContent=t;setTimeout(()=>b.textContent="Adresse kopieren",2500);};
+    try{navigator.clipboard.writeText(url).then(()=>done("Kopiert ✓"),()=>{prompt("Kalender-Adresse:",url);});}catch(e){prompt("Kalender-Adresse:",url);}
+    return;
+  }
   if(b.dataset.cmp){st.cmp[k]=b.dataset.cmp;render();return;}
 });
 render();

@@ -259,6 +259,90 @@ foreach ($key in $Leagues.Keys) {
 }
 foreach ($k in $HallNames.Keys) { $out.halls[$k] = $HallNames[$k] }
 
+# Hallen mit Adresse (von Hand gepflegt in tools/halls.json)
+$HallInfo = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'halls.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json
+$out.hallInfo = $HallInfo
+
+# ---------- Kalender zum Abonnieren (kalender-c.ics, kalender-d.ics, kalender.ics) ----------
+# Termin beginnt beim Treff (1 Stunde vor Anwurf) und endet ca. 30 Minuten nach Spielende.
+$GameLen = @{ D = 40; C = 50 }
+$AppUrl  = 'https://jari-lulz.github.io/hcvg-eltern-app/'
+$ae = [char]0xE4
+
+function IcsText([string]$s) { return ($s -replace '\\', '\\\\' -replace ';', '\;' -replace ',', '\,' -replace "`r?`n", '\n') }
+function IcsFold([string]$line) {
+  # Zeilen laenger als 74 Zeichen umbrechen (Folgezeile beginnt mit Leerzeichen)
+  if ($line.Length -le 74) { return $line }
+  $parts = @(); $i = 0
+  while ($i -lt $line.Length) { $n = [Math]::Min(73, $line.Length - $i); $parts += $line.Substring($i, $n); $i += $n }
+  return ($parts -join "`r`n ")
+}
+function ShortTeam([string]$t) { if ($t -eq $Us) { return 'HC VG' } elseif ($t -match 'Platzhalter') { return 'Gegner offen' } else { return $t } }
+
+$stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd'T'HHmmss'Z'")
+$events = @{ D = @(); C = @() }
+foreach ($key in $out.leagues.Keys) {
+  $seen = @{}
+  foreach ($g in $out.leagues[$key].games) {
+    $date, $time, $loc, $hm, $away, $res, $note = $g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6]
+    if (-not $date) { continue }
+    if ($hm -ne $Us -and $away -ne $Us) { continue }
+    $d = [datetime]::ParseExact($date, 'dd.MM.yyyy', $null)
+    $pair = "$key-$hm-$away"; $seen[$pair] = 1 + [int]$seen[$pair]
+    $uid = (($pair + '-' + $seen[$pair]) -replace '[^A-Za-z0-9-]', '') + '@hcvg-eltern-app'
+    $usHome = $hm -eq $Us
+    $title = "$key-Jugend: $(ShortTeam $hm) - $(ShortTeam $away)"
+    if ($res) { $title += " ($res)" }
+    $hallN = ''; $hallA = ''
+    if ($loc -and $HallInfo.$loc) { $hallN = $HallInfo.$loc[0]; $hallA = $HallInfo.$loc[1] }
+    elseif ($loc -and $HallNames[$loc]) { $hallN = $HallNames[$loc] }
+    $where = (@($hallN, $hallA) | Where-Object { $_ }) -join ', '
+    $maps = ''
+    if ($where) { $maps = 'https://www.google.com/maps/dir/?api=1&destination=' + [uri]::EscapeDataString($where) }
+    $desc = @()
+    if ($usHome) { $desc += 'Heimspiel' } else { $desc += "Ausw${ae}rtsspiel" }
+    $lines = @('BEGIN:VEVENT', "UID:$uid", "DTSTAMP:$stamp")
+    if ($time -and $time -ne '00:00') {
+      $kick = $d.Add([timespan]::Parse($time))
+      $start = $kick.AddMinutes(-60); $end = $kick.AddMinutes($GameLen[$key] + 40)
+      $desc += "Treff: $($start.ToString('HH:mm')) Uhr"
+      $desc += "Anwurf: $time Uhr"
+      $lines += "DTSTART;TZID=Europe/Berlin:$($start.ToString("yyyyMMdd'T'HHmmss"))"
+      $lines += "DTEND;TZID=Europe/Berlin:$($end.ToString("yyyyMMdd'T'HHmmss"))"
+    } else {
+      $desc += 'Uhrzeit noch offen'
+      $lines += "DTSTART;VALUE=DATE:$($d.ToString('yyyyMMdd'))"
+      $lines += "DTEND;VALUE=DATE:$($d.AddDays(1).ToString('yyyyMMdd'))"
+    }
+    if ($note) { $desc += "Hinweis: $note" }
+    if ($res) { $desc += "Ergebnis: $res" }
+    if ($where) { $desc += "Halle: $where" }
+    if ($maps) { $desc += "Route: $maps" }
+    $desc += "Alle Infos: $AppUrl"
+    $lines += "SUMMARY:$(IcsText $title)"
+    if ($where) { $lines += "LOCATION:$(IcsText $where)" }
+    $lines += "DESCRIPTION:$(IcsText ($desc -join "`n"))"
+    if ($maps) { $lines += "URL:$maps" }
+    $lines += 'END:VEVENT'
+    $events[$key] += , (($lines | ForEach-Object { IcsFold $_ }) -join "`r`n")
+  }
+}
+
+$tz = @('BEGIN:VTIMEZONE', 'TZID:Europe/Berlin',
+  'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
+  'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
+  'END:VTIMEZONE') -join "`r`n"
+function Write-Ics([string]$file, [string]$name, $evs) {
+  $head = @('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//HCVG Eltern-App//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    "X-WR-CALNAME:$name", 'X-WR-TIMEZONE:Europe/Berlin', 'REFRESH-INTERVAL;VALUE=DURATION:PT6H', 'X-PUBLISHED-TTL:PT6H') -join "`r`n"
+  $body = @($head, $tz) + $evs + @('END:VCALENDAR')
+  [IO.File]::WriteAllText((Join-Path $Root $file), (($body -join "`r`n") + "`r`n"), (New-Object Text.UTF8Encoding $false))
+}
+Write-Ics 'kalender-c.ics' 'HC VG C-Jugend' $events['C']
+Write-Ics 'kalender-d.ics' 'HC VG D-Jugend' $events['D']
+Write-Ics 'kalender.ics'   'HC VG D- und C-Jugend' ($events['D'] + $events['C'])
+Write-Host "Kalender: C $($events['C'].Count), D $($events['D'].Count) Termine"
+
 $json = ConvertTo-Json -InputObject $out -Depth 10 -Compress
 # Berichte als fertiges JSON einsetzen (vermeidet doppeltes Umwandeln)
 $json = [regex]::Replace($json, '"@@(\d+)@@"', { param($m) (Get-Variable -Name "rep_$($m.Groups[1].Value)" -Scope Script).Value })
