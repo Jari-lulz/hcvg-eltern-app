@@ -34,6 +34,10 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Ergebnisse, Tabellen und Statistik stehen in den Reitern D-Jugend und C-Jugend.
 - Gelbe Karten und Zeitstrafen sind bei Jugendspielen anonym, also nur pro Mannschaft verfügbar.
 
+## Reiter
+- Start, D-Jugend (Spiele/Statistik), C-Jugend (Spiele/Statistik), Analyse.
+- Analyse (`analyse(k)` in `index.html`): feste Regeln, keine Live-KI. Vergleicht HC VG mit der Liga (Angriff, Abwehr, 7m, Strafen, Halbzeiten, erste/letzte 10 Minuten, Torverteilung, enge Spiele) und leitet daraus Stärken, Baustellen und bis zu 3 Trainingsschwerpunkte ab. Nur Mannschaftsebene, keine Kritik an einzelnen Kindern.
+
 ## Bilder
 - `img/logo.webp` (Vereinswappen, Kopf + Favicon), `img/team-kreis.jpg` (Mannschaftskreis von oben, kaum Gesichter; Banner auf der Startseite, auf 900px verkleinert).
 - Repo und Seite sind öffentlich: Fotos mit erkennbaren Kindergesichtern nur mit Einverständnis der Eltern einbauen. Seite hat `noindex`.

@@ -54,8 +54,8 @@ h1 span{color:var(--court)}
 h2{font:700 22px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0}
 h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em;margin:0}
 .switch{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
-.seg button{font:700 16px/1 var(--display);text-transform:uppercase;letter-spacing:.04em;border:0;background:transparent;color:var(--muted);padding:11px 6px;border-radius:9px;cursor:pointer}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{font:700 15px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;border:0;background:transparent;color:var(--muted);padding:11px 2px;border-radius:9px;cursor:pointer;min-width:0}
 .seg button[aria-selected="true"]{background:var(--court);color:var(--court-ink)}
 .seg button:focus-visible,.btn:focus-visible,.chip:focus-visible,.sub button:focus-visible,summary:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 
@@ -202,6 +202,22 @@ tr.mine td:first-child{color:var(--ink)}
 .medal{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font:800 13px/1 var(--display);background:var(--bg);color:var(--muted)}
 .medal.m1{background:#f2c230;color:#1b1400}.medal.m2{background:#c9d1dc;color:#1b2333}.medal.m3{background:#d9a36a;color:#2a1600}
 .more{align-self:center}
+
+/* Analyse */
+.ana-sum .sum{margin:0;font-size:16px;line-height:1.5}
+.ana-sum .sum b{color:var(--tape)}
+.ais{display:flex;flex-direction:column;gap:8px}
+.ai{display:grid;grid-template-columns:30px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;align-items:start}
+.ai .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 16px/1 var(--display);color:#fff}
+.ai.pos .ic{background:var(--win)} .ai.neg .ic{background:var(--loss)}
+.ai b{font-weight:700}
+.ai p{margin:2px 0 0;font-size:14px;color:var(--muted)}
+.focus{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:f}
+.focus li{counter-increment:f;position:relative;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tape);border-radius:14px;padding:12px 14px 12px 56px;display:flex;flex-direction:column;gap:3px}
+.focus li::before{content:counter(f);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:8px;background:var(--court);color:var(--court-ink);display:grid;place-items:center;font:800 18px/1 var(--display)}
+.focus b{font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.focus span{font-size:14px}
+.focus small{font-size:12px;color:var(--muted)}
 </style>
 
 <div class="wrap">
@@ -218,6 +234,7 @@ tr.mine td:first-child{color:var(--ink)}
       <button id="tab-us" role="tab" aria-selected="true" data-view="us">Start</button>
       <button id="tab-D" role="tab" aria-selected="false" data-view="D">D-Jugend</button>
       <button id="tab-C" role="tab" aria-selected="false" data-view="C">C-Jugend</button>
+      <button id="tab-ana" role="tab" aria-selected="false" data-view="ana">Analyse</button>
     </div>
   </div>
 
@@ -455,7 +472,7 @@ function viewUs(){
   return hero + nextCard("C") + nextCard("D") + trainingTile();
 }
 
-const st = { filterMine:{D:false,C:false}, sub:{D:"spiele",C:"spiele"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, cmp:{D:"gf",C:"gf"} };
+const st = { filterMine:{D:false,C:false}, sub:{D:"spiele",C:"spiele"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cmp:{D:"gf",C:"gf"} };
 try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["spiele","stat"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
 
 function subNav(k){
@@ -525,12 +542,15 @@ function viewStats(k){
 
   // Torschützinnen der Liga
   const top=[...S.players].filter(p=>p.g>0).sort(sorters.g);
-  const shown=st.topAll[k]?top:top.slice(0,10);
-  html+=`<section class="sec"><div class="sechead"><h2>Torschützinnen der Liga</h2><span class="note">${top.length} Spielerinnen mit Toren</span></div>
+  const pool=st.topUs[k]?top.filter(p=>p.team===US):top;
+  const shown=st.topAll[k]?pool:pool.slice(0,10);
+  html+=`<section class="sec"><div class="sechead"><h2>Torschützinnen der Liga</h2>
+    <div class="chips" role="group" aria-label="Filter"><button class="chip" data-topus="0" aria-pressed="${!st.topUs[k]}">Alle</button><button class="chip" data-topus="1" aria-pressed="${st.topUs[k]}">Nur HC VG</button></div></div>
+    <span class="note">${top.length} Spielerinnen mit Toren${st.topUs[k]?` · davon ${pool.length} von HC VG, Platz = Rang in der ganzen Liga`:""}</span>
     <div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>Tore</th><th>Sp</th><th>Ø</th></tr></thead><tbody>${
       shown.map((p,i)=>{const r=top.findIndex(q=>q.g===p.g)+1;return `<tr class="${p.team===US?"mine":""}"><td>${r<=3?`<span class="medal m${r}">${r}</span>`:r}</td><td class="nm">${esc(p.name)}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${p.g}</td><td>${p.gp}</td><td>${fmt1(p.g/p.gp)}</td></tr>`;}).join("")
     }</tbody></table></div>
-    ${top.length>10?`<button class="chip more" data-top="1" aria-pressed="${st.topAll[k]}">${st.topAll[k]?"Nur Top 10":"Alle "+top.length+" anzeigen"}</button>`:""}
+    ${pool.length>10?`<button class="chip more" data-top="1" aria-pressed="${st.topAll[k]}">${st.topAll[k]?"Nur Top 10":"Alle "+pool.length+" anzeigen"}</button>`:""}
   </section>`;
 
   // Ligavergleich
@@ -560,13 +580,115 @@ function viewStats(k){
   return html;
 }
 
+/* ---------- Analyse: Stärken, Baustellen, Trainingsschwerpunkte ----------
+   Regelbasiert aus den Spielberichten. Jede Regel vergleicht HC VG mit der Liga
+   und liefert einen Pluspunkt oder eine Baustelle (mit Gewicht w für die Reihenfolge). */
+function analyse(k){
+  const S=leagueStats(k), me=S.teams[US];
+  if(!me||!me.gp) return null;
+  const T=Object.values(S.teams).filter(t=>t.gp), n=T.length;
+  const rankOf=(fn,lowGood)=>{const v=fn(me);return 1+T.filter(t=>lowGood?fn(t)<v:fn(t)>v).length;};
+  const avg=fn=>T.reduce((s,t)=>s+fn(t),0)/n;
+  const plus=[], minus=[];
+  const top3=Math.max(1,Math.round(n/3)), low3=n-top3+1;
+
+  // Angriff / Abwehr
+  const gf=t=>t.gf/t.gp, ga=t=>t.ga/t.gp;
+  const rA=rankOf(gf), rD=rankOf(ga,true);
+  if(rA<=top3) plus.push({w:4-rA/n,t:"Torgefährlicher Angriff",x:`${fmt1(gf(me))} Tore pro Spiel – Platz ${rA} von ${n} in der Liga.`});
+  else if(rA>=low3) minus.push({w:3,t:"Zu wenig Tore",x:`Nur ${fmt1(gf(me))} Tore pro Spiel (Platz ${rA} von ${n}).`,
+    f:["Torabschluss","Würfe aus vollem Lauf, Tempogegenstoß nach Ballgewinn, Wurfvarianten von Außen und Rückraum."]});
+  if(rD<=top3) plus.push({w:4.2-rD/n,t:rD===1?"Beste Abwehr der Liga":"Stabile Abwehr",x:`Nur ${fmt1(ga(me))} Gegentore pro Spiel – Platz ${rD} von ${n}.`});
+  else if(rD>=low3) minus.push({w:3.2,t:"Viele Gegentore",x:`${fmt1(ga(me))} Gegentore pro Spiel (Platz ${rD} von ${n}).`,
+    f:["Abwehrarbeit","1-gegen-1, gemeinsames Verschieben, Rückzug nach Ballverlust."]});
+
+  // Siebenmeter
+  const q=t=>t.s7?t.g7/t.s7:0, qa=avg(q);
+  if(me.s7>=5){
+    if(q(me)>=qa+0.07) plus.push({w:2,t:"Sicher vom Siebenmeter",x:`${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}), Liga-Schnitt ${Math.round(qa*100)} %.`});
+    else if(q(me)<=qa-0.07||q(me)<0.55) minus.push({w:2.5+(qa-q(me))*5,t:"Siebenmeter-Quote",x:`Nur ${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}), Liga-Schnitt ${Math.round(qa*100)} %.`,
+      f:["Siebenmeter","Am Ende jedes Trainings ein paar Siebenmeter unter Druck: feste Werferinnen, eigene Wurfecke, Torhüterin als Gegnerin."]});
+  }
+
+  // Fairness / Strafen
+  const pen=t=>t.rg?(t.y+t.m2+t.d)/t.rg:0, pa=avg(pen);
+  if(me.rg){
+    if(pen(me)<=pa*0.75) plus.push({w:1.5,t:"Faire Abwehr",x:`${fmt1(pen(me))} Strafen pro Spiel, Liga-Schnitt ${fmt1(pa)}.`});
+    else if(pen(me)>=pa*1.3) minus.push({w:2,t:"Viele Strafen",x:`${fmt1(pen(me))} Strafen pro Spiel, Liga-Schnitt ${fmt1(pa)}.`,
+      f:["Fair verteidigen","Beinarbeit statt Klammern: Gegnerin mit dem Körper stellen, Arme hoch."]});
+  }
+
+  // Erste vs. zweite Halbzeit
+  const our=ALL.filter(g=>g.lg===k&&g.mine&&g.res);
+  let h1=0,h2=0,nh=0;
+  for(const g of our){const r=report(g); if(!r?.ht) continue;
+    const [a,b]=r.ht.split(":").map(Number), [c,d]=g.res.split(":").map(Number), home=g.home===US;
+    const d1=home?a-b:b-a, dt=home?c-d:d-c; h1+=d1; h2+=dt-d1; nh++;}
+  if(nh>=2){
+    const a1=h1/nh, a2=h2/nh, f=v=>(v>0?"+":"")+fmt1(v);
+    if(a2-a1>=1.5) plus.push({w:2+Math.min(1,(a2-a1)/5),t:"Stark in der zweiten Halbzeit",x:`Tordifferenz pro Spiel: 1. Halbzeit ${f(a1)}, 2. Halbzeit ${f(a2)}. Die Mannschaft legt nach der Pause zu.`});
+    else if(a1-a2>=1.5) minus.push({w:2+Math.min(1,(a1-a2)/5),t:"Nachlassen nach der Pause",x:`Tordifferenz pro Spiel: 1. Halbzeit ${f(a1)}, 2. Halbzeit ${f(a2)}.`,
+      f:["Kraft bis zum Schluss","Ausdauer- und Intervalleinheiten, Spielformen mit Aufgaben in müdem Zustand."]});
+    if(me.htLead===me.htGp&&me.htGp>=2) plus.push({w:1.8,t:"Immer vorn zur Pause",x:`In allen ${me.htGp} Spielen mit Spielbericht zur Halbzeit in Führung.`});
+  }
+
+  // Start- und Schlussphase (je 10 Minuten)
+  const nb=S.nb, per=v=>v/me.rg;
+  if(me.rg>=2){
+    const s0=per(me.b[0]-me.bA[0]), sL=per(me.b[nb-1]-me.bA[nb-1]);
+    if(s0>=1) plus.push({w:1.6,t:"Blitzstart",x:`In den ersten 10 Minuten im Schnitt ${fmt1(s0)} Tore besser als der Gegner.`});
+    else if(s0<=-0.7) minus.push({w:1.8+Math.min(1,-s0/3),t:"Holpriger Start",x:`In den ersten 10 Minuten im Schnitt ${fmt1(-s0)} Tore hinten.`,
+      f:["Wach ins Spiel","Aufwärmen mit Wettkampfcharakter, klare Aufgaben für die ersten Angriffe."]});
+    if(sL>=1) plus.push({w:1.6,t:"Starke Schlussphase",x:`In den letzten 10 Minuten im Schnitt ${fmt1(sL)} Tore besser als der Gegner.`});
+    else if(sL<=-0.5) minus.push({w:1.7+Math.min(1,-sL/3),t:"Schlussphase",x:`In den letzten 10 Minuten im Schnitt ${fmt1(-sL)} Tore weniger als der Gegner (${me.b[nb-1]}:${me.bA[nb-1]} insgesamt).`,
+      f:["Konzentration am Ende","Spielformen mit Spielstand und Zeit („noch 5 Minuten, 2 Tore hinten“), Wechsel bewusst planen."]});
+  }
+
+  // Verteilung der Tore
+  const ours=S.players.filter(p=>p.team===US&&p.g>0).sort((a,b)=>b.g-a.g);
+  const tot=ours.reduce((s,p)=>s+p.g,0);
+  if(tot>=20){
+    const share=ours[0].g/tot, many=ours.filter(p=>p.g/tot>=0.08).length;
+    if(share>=0.35) minus.push({w:1.6+share,t:"Tore hängen an wenigen",x:`${Math.round(share*100)} % der Tore wirft eine einzige Spielerin.`,
+      f:["Torgefahr verteilen","Spielzüge, die gezielt Außen und Kreis einbinden, damit der Gegner nicht nur eine Spielerin decken muss."]});
+    else if(many>=5) plus.push({w:1.4+many/10,t:"Torgefahr auf vielen Schultern",x:`${many} Spielerinnen haben jeweils mindestens 8 % der Tore geworfen.`});
+  }
+
+  // Enge Spiele (höchstens 3 Tore Unterschied)
+  let cw=0,cl=0;
+  for(const g of our){const [h,a]=g.res.split(":").map(Number); const d=g.home===US?h-a:a-h; if(Math.abs(d)<=3&&d!==0){d>0?cw++:cl++;}}
+  if(cw+cl>=2){ if(cw>cl) plus.push({w:1.5,t:"Nervenstark in engen Spielen",x:`${cw} von ${cw+cl} knappen Spielen gewonnen.`});
+    else if(cl>cw) minus.push({w:1.7,t:"Knappe Spiele",x:`${cl} von ${cw+cl} knappen Spielen verloren.`,f:["Ruhe in engen Phasen","Auszeit-Situationen üben, sichere Angriffe statt schneller Würfe."]}); }
+
+  plus.sort((a,b)=>b.w-a.w); minus.sort((a,b)=>b.w-a.w);
+  const rank=LEAGUES[k].table.findIndex(r=>r[0]===US)+1;
+  return {plus,minus,focus:minus.filter(m=>m.f).slice(0,3),rank,n:LEAGUES[k].table.length,me,rg:me.rg};
+}
+
+function viewAnalysis(){
+  const k=st.ana, A=analyse(k);
+  const ch=id=>`<button class="chip" data-ana="${id}" aria-pressed="${k===id}">${id}-Jugend</button>`;
+  let html=`<section class="sec"><div class="sechead"><h2>Datenauswertung</h2><div class="chips" role="group" aria-label="Mannschaft">${ch("D")}${ch("C")}</div></div>`;
+  if(!A) return html+`<div class="empty">Noch keine Spiele mit Spielbericht.</div></section>`;
+  const m=A.me;
+  const lead=A.plus[0], weak=A.minus[0];
+  html+=`<div class="board ana-sum"><span class="lg" style="align-self:flex-start">Kurz gesagt</span>
+    <p class="sum">Platz ${A.rank} von ${A.n}, ${m.w} ${m.w===1?"Sieg":"Siege"}, ${m.x} Remis, ${m.l} ${m.l===1?"Niederlage":"Niederlagen"}.${lead?` Größte Stärke: <b>${esc(lead.t)}</b>.`:""}${weak?` Größte Baustelle: <b>${esc(weak.t)}</b>.`:""}</p></div></section>`;
+  const card=(it,cls)=>`<div class="ai ${cls}"><span class="ic" aria-hidden="true">${cls==="pos"?"✓":"!"}</span><div><b>${esc(it.t)}</b><p>${it.x}</p></div></div>`;
+  html+=`<section class="sec"><h2>Das zeichnet die Mannschaft aus</h2><div class="ais">${A.plus.map(i=>card(i,"pos")).join("")||'<div class="empty">Noch keine klaren Stärken in den Zahlen – dafür braucht es mehr Spiele.</div>'}</div></section>`;
+  html+=`<section class="sec"><h2>Hier ist noch Luft nach oben</h2><div class="ais">${A.minus.map(i=>card(i,"neg")).join("")||'<div class="empty">Die Zahlen zeigen keine echte Schwachstelle. Weiter so!</div>'}</div></section>`;
+  html+=`<section class="sec"><h2>Mögliche Trainingsschwerpunkte</h2><ol class="focus">${A.focus.map(i=>`<li><b>${esc(i.f[0])}</b><span>${esc(i.f[1])}</span><small>Weil: ${esc(i.t)}</small></li>`).join("")||'<li><b>Weiter wie bisher</b><span>Die Zahlen geben keinen klaren Schwerpunkt vor.</span></li>'}</ol></section>`;
+  html+=`<p class="note" style="margin:0">Automatisch berechnet aus ${A.rg} Spielberichten von nuLiga und verglichen mit allen Teams der Liga. Die Auswertung läuft nach festen Regeln, die ich für die App geschrieben habe, und aktualisiert sich mit jedem neuen Spiel. Sie kennt nur Tore, Siebenmeter, Strafen und Spielzeiten, keine Würfe, Paraden oder Fehlpässe. Bei wenigen Spielen sind die Zahlen noch wackelig. Den Blick des Trainerteams ersetzt sie nicht.</p>`;
+  return html;
+}
+
 /* ---------- Steuerung ---------- */
 let current="us";
-try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C"].includes(s))current=s;}catch(e){}
-function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
+try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C","ana"].includes(s))current=s;const a=localStorage.getItem("hcvg-ana");if(a==="C"||a==="D")st.ana=a;}catch(e){}
+function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-ana",st.ana);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
-  view.innerHTML = current==="us"?viewUs():viewLeague(current);
+  view.innerHTML = current==="us"?viewUs():current==="ana"?viewAnalysis():viewLeague(current);
   document.getElementById("stand").textContent=`Datenstand: ${DATA.updated} · Quelle: nuLiga HVMV (BHV Ost 2026/27). Ohne Gewähr – kurzfristige Verlegungen bitte beim Trainer erfragen.`;
 }
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{current=b.dataset.view;save();render();window.scrollTo({top:0});}));
@@ -578,6 +700,8 @@ view.addEventListener("click",e=>{
   if(b.dataset.f){st.filterMine[k]=b.dataset.f==="us";render();return;}
   if(b.dataset.sort){st.sort[k]=b.dataset.sort;render();return;}
   if(b.dataset.top){st.topAll[k]=!st.topAll[k];render();return;}
+  if(b.dataset.topus){st.topUs[k]=b.dataset.topus==="1";render();return;}
+  if(b.dataset.ana){st.ana=b.dataset.ana;save();render();return;}
   if(b.dataset.cmp){st.cmp[k]=b.dataset.cmp;render();return;}
 });
 render();
