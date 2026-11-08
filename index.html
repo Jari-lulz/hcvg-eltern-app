@@ -161,7 +161,11 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .brow .btn.share svg{width:18px;height:18px}
 /* Kompakte Spielkarte auf der Startseite */
 .board.nc{padding:10px 14px;gap:7px}
+/* Erster Bildschirm: bei hohen Fenstern (Opera, Chrome ohne Leisten) wächst erst das Foto ein Stück,
+   der Rest verteilt sich auf die Abstände – so enden die Spielkarten immer unten, ohne Lücke */
 .fold{display:flex;flex-direction:column;gap:10px}
+.fold figure.hero{flex:1 1 auto;max-height:min(46vw,260px)}
+.fold .board.nc{flex:1 1 auto;justify-content:space-evenly}
 /* Kaderübersicht */
 .kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:6px}
 .kp2{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:0}
@@ -1269,11 +1273,12 @@ let animNext=true;
 let foldH=0, foldW=0;
 function sizeFold(){
   const f=view.querySelector(".fold"); if(!f) return;
-  f.style.minHeight="";
+  f.style.minHeight=""; f.style.marginBottom="";
   if(window.innerWidth>600) return;   // PC / Tablet: kein Strecken, keine Lücke
   if(!foldH||window.innerWidth!==foldW){ foldH=window.innerHeight; foldW=window.innerWidth; }
-  const need=foldH-(f.getBoundingClientRect().top+window.scrollY)+22;   // +22: Kuchen-Alarm sicher unterhalb (auch hinter Browserleisten)
-  if(f.offsetHeight<need) f.style.minHeight=need+"px";
+  // Karten enden 10 px über dem unteren Rand; der Abstand danach schiebt den Kuchen-Alarm sicher unter den Bildschirm
+  const need=foldH-(f.getBoundingClientRect().top+window.scrollY)-10;
+  if(f.offsetHeight<need){ f.style.minHeight=need+"px"; f.style.marginBottom="22px"; }
 }
 window.addEventListener("resize",()=>{ if(current==="us"&&window.innerWidth!==foldW) sizeFold(); });
 function render(){
