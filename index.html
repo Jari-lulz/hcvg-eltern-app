@@ -258,6 +258,14 @@ details[open]>summary .chev{transform:rotate(180deg)}
 .gx{padding:4px 14px 16px;display:flex;flex-direction:column;gap:12px;font-size:14px}
 .gx .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted)}
 .gx .meta b{color:var(--ink);font-weight:600}
+.gn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gn>div{border-radius:10px;padding:8px 10px;border:1px solid var(--line);background:var(--surface)}
+.gn .plus{border-left:4px solid var(--win)}
+.gn .minus{border-left:4px solid var(--loss)}
+.gn h4{font:700 13px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+.gn ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35}
+.gn .note{grid-column:1/-1;margin:0;font-size:11px}
+@media (max-width:520px){.gn{grid-template-columns:1fr}}
 .sc{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .sc h4{font:700 14px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
 .sc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
@@ -534,7 +542,63 @@ function gameDetail(g){
   meta.push(`Schiedsrichter <b>${r.sr?.length?esc(r.sr.join(", ")):"–"}</b>`);
   const up = persp===1?g.home:g.away, dn = persp===1?g.away:g.home;
   const mom=momentum(r,LEN[g.lg],persp,sn(up),sn(dn));
-  return `<div class="gx"><div class="meta"><span>${meta.join("</span><span>")}</span></div>${mom}<div class="sc">${scorerList(g.home,r.h)}${scorerList(g.away,r.a)}</div></div>`;
+  return `<div class="gx"><div class="meta"><span>${meta.join("</span><span>")}</span></div>${mom}${g.mine?gameNotes(g,r,persp):""}<div class="sc">${scorerList(g.home,r.h)}${scorerList(g.away,r.a)}</div></div>`;
+}
+
+/* Kurze Spieleinschätzung (nur unsere Spiele): was lief gut, woran arbeiten wir.
+   Nur aus den nuLiga-Daten: Halbzeiten, Torserien, Spielphasen, 7m, Zeitstrafen, Vergleich mit dem Saisonschnitt des Gegners. */
+function gameNotes(g,r,us){
+  const op=3-us, T=LEN[g.lg]*60;
+  const [hg,ag]=g.res.split(":").map(Number), gf=us===1?hg:ag, ga=us===1?ag:hg;
+  const S=us===1?r.h:r.a, O=us===1?r.a:r.h, oppFull=us===1?g.away:g.home, opp=sn(oppFull);
+  const good=[], bad=[];   // [Gewicht, Text]
+  // Halbzeiten
+  if(r.ht){ const [a,b]=r.ht.split(":").map(Number), h1f=us===1?a:b, h1a=us===1?b:a, h2f=gf-h1f, h2a=ga-h1a;
+    const d1=h1f-h1a, d2=h2f-h2a;
+    if(d2-d1>=3&&d2>0) good.push([d2+2,`Starke zweite Halbzeit: ${h2f}:${h2a} nach der Pause`]);
+    else if(d1-d2>=3&&d1>0) good.push([d1+1,`Starke erste Halbzeit: ${h1f}:${h1a} bis zur Pause`]);
+    if(d2<=-3) bad.push([-d2+1,`Zweite Halbzeit ging mit ${h2f}:${h2a} verloren`]);
+    else if(d1<=-3) bad.push([-d1,`Erste Halbzeit: ${h1f}:${h1a} zur Pause`]); }
+  // Torserien, Führung, Spielphasen
+  const goals=(r.ev||[]).filter(e=>e[2]==="g"||e[2]==="7g").sort((a,b)=>a[0]-b[0]);
+  if(goals.length>=6){
+    let run=0,who=0; const best={1:[0,0],2:[0,0]};
+    for(const [s,side] of goals){ if(side===who) run++; else {who=side;run=1;} if(side&&run>best[side][0]) best[side]=[run,s]; }
+    const mm=s=>Math.max(1,Math.ceil(s/60));
+    if(best[us][0]>=4) good.push([best[us][0],`Torserie: ${best[us][0]} Tore am Stück (bis Minute ${mm(best[us][1])})`]);
+    if(best[op][0]>=4) bad.push([best[op][0],`Eine Phase mit ${best[op][0]} Gegentoren am Stück (bis Minute ${mm(best[op][1])})`]);
+    let d=0,mn=0,mx=0; for(const [,side] of goals){ d+=side===us?1:-1; mn=Math.min(mn,d); mx=Math.max(mx,d); }
+    if(mn<=-3&&gf>=ga) good.push([-mn+3,`Aufholjagd: nach ${-mn} Toren Rückstand nicht aufgegeben`]);
+    if(mx>=3&&gf<=ga) bad.push([mx+2,`Eine ${mx}-Tore-Führung ging noch verloren`]);
+    const cnt=(a,b)=>{let f=0,x=0;for(const [s,side] of goals) if(s>a&&s<=b){ if(side===us)f++; else if(side===op)x++; } return [f,x];};
+    const [ef,ea]=cnt(T-600,T+600), [sf,sa]=cnt(-1,600);
+    if(ef-ea>=3) good.push([ef-ea,`Starke Schlussphase: ${ef}:${ea} in den letzten 10 Minuten`]);
+    if(ea-ef>=3) bad.push([ea-ef,`Schlussphase: ${ef}:${ea} in den letzten 10 Minuten`]);
+    if(sf-sa>=3) good.push([sf-sa,`Toller Start: ${sf}:${sa} in den ersten 10 Minuten`]);
+    if(sa-sf>=3) bad.push([sa-sf,`Holpriger Start: ${sf}:${sa} in den ersten 10 Minuten`]);
+  }
+  // Vergleich mit dem, was der Gegner in seinen anderen Spielen wirft und kassiert
+  const t=leagueStats(g.lg).teams[oppFull];
+  if(t&&t.gp>=3){
+    const oGf=(t.gf-ga)/(t.gp-1), oGa=(t.ga-gf)/(t.gp-1);
+    if(oGf-ga>=4&&ga-gf<8) good.push([oGf-ga,`Starke Abwehr: ${opp} warf nur ${ga} Tore (sonst im Schnitt ${Math.round(oGf)})`]);
+    if(ga-oGf>=5) bad.push([ga-oGf-1,`Abwehr: ${ga} Gegentore, ${opp} wirft sonst im Schnitt ${Math.round(oGf)}`]);
+    if(gf-oGa>=4) good.push([gf-oGa,`Treffsicherer Angriff: ${gf} Tore, ${opp} kassiert sonst im Schnitt ${Math.round(oGa)}`]);
+    if(oGa-gf>=5) bad.push([oGa-gf-1,`Angriff: ${gf} Tore, ${opp} kassiert sonst im Schnitt ${Math.round(oGa)}`]);
+  }
+  // Siebenmeter
+  if(S&&S.s7>=3){ const q=S.g7/S.s7;
+    if(q>=.75) good.push([2+S.g7/2,`Sichere Siebenmeter: ${S.g7} von ${S.s7} verwandelt`]);
+    else if(q<=.5) bad.push([2+(S.s7-S.g7)/2,`Siebenmeter: ${S.g7} von ${S.s7} verwandelt`]); }
+  // Zeitstrafen
+  if(S&&O){ if(S.m2>=O.m2+2) bad.push([S.m2-O.m2+1,`${S.m2} Zeitstrafen (${opp}: ${O.m2}), oft in Unterzahl`]);
+    else if(S.m2===0&&O.m2>=2) good.push([2,`Fair gespielt: keine Zeitstrafe`]); }
+  // Viele Torschützinnen
+  const sc=(S?.p||[]).filter(p=>p[3]>0).length;
+  if(sc>=6) good.push([sc/2,`Tore breit verteilt: ${sc} verschiedene Torschützinnen`]);
+  if(!good.length&&!bad.length) return "";
+  const top=a=>a.sort((x,y)=>y[0]-x[0]).slice(0,3).map(x=>`<li>${esc(x[1])}</li>`).join("");
+  return `<div class="gn">${good.length?`<div class="plus"><h4>👍 Das lief gut</h4><ul>${top(good)}</ul></div>`:""}${bad.length?`<div class="minus"><h4>💪 Daran arbeiten wir</h4><ul>${top(bad)}</ul></div>`:""}<p class="note">Einschätzung nur aus den nuLiga-Daten</p></div>`;
 }
 
 function countdown(dt){
@@ -633,7 +697,7 @@ function inviteText(k){
     `📅 ${WDL[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}`+(g.time?`, Anwurf ${g.time} Uhr`:"")];
   if(g.time) lines.push(`⏰ Treff der Mannschaft: ${hhmm(new Date(g.dt-3600e3))} Uhr`);
   if(g.loc){ lines.push(`📍 ${hallName(g.loc)}${hallAddr(g.loc)?", "+hallAddr(g.loc):""}`); lines.push(`🗺️ Route: ${mapsUrl(g.loc)}`); }
-  lines.push(`Alle Infos & Live-Ticker: ${new URL(".",location.href).href}`);
+  lines.push(`Alle Infos zum Team: ${new URL(".",location.href).href}`);
   return lines.join("\n");
 }
 
@@ -719,15 +783,15 @@ function powertime(k,p){
   return p.b.map((v,i)=>v===mx?`<span class="nw">${i*10} bis ${Math.min((i+1)*10,LEN[k])}</span>`:null).filter(Boolean).join(" und ");
 }
 
-// Kader: alle Spielerinnen, die in einem Spielbericht stehen, je Jugend nach Rückennummer
+// Kader: alle Spielerinnen aus den Spielberichten; zuerst Torhüterinnen, dann aufsteigend nach Anzahl Spiele
 function viewKader(){
   let html=`<section class="sec"><button class="btn line" data-back="1" style="align-self:flex-start">← Zurück</button><h2>Unsere Mannschaften</h2></section>`;
   for(const k of ["D","C"]){
-    const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
+    const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(isKeeper(k,b)-isKeeper(k,a))||(a.gp-b.gp)||(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
     html+=`<section class="sec"><div class="sechead"><h2>${k}-Jugend</h2><span class="note">${ps.length} Spielerinnen</span></div>
       <div class="kader">${ps.map(p=>{const pt=powertime(k,p);return `<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${isKeeper(k,p)?`<span class="pt">🧤 Torhüterin · Hält das Team im Spiel</span>`:pt?`<span class="pt">Torgefährlich in Minute ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
   }
-  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene. „Torgefährlich in Minute …“ = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
+  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Zuerst die Torhüterinnen, danach nach Anzahl der Spiele. Rückennummer = die am häufigsten getragene. „Torgefährlich in Minute …“ = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
   return html;
 }
 
