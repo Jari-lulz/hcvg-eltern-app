@@ -40,7 +40,10 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 
 ## Reiter
 - Start, D-Jugend (Spiele/Statistik), C-Jugend (Spiele/Statistik), Analyse.
-- Analyse (`analyse(k)` in `index.html`): feste Regeln, keine Live-KI. Vergleicht HC VG mit der Liga (Angriff, Abwehr, 7m, Strafen, Halbzeiten, erste/letzte 10 Minuten, Torverteilung, enge Spiele) und leitet daraus Stärken, Baustellen und bis zu 3 Trainingsschwerpunkte ab. Nur Mannschaftsebene, keine Kritik an einzelnen Kindern.
+- Analyse hat drei Bereiche: Unser Team, Gegner-Check, Liga. Gegner-Check und Liga lassen sich mit `FEATURE_GEGNER` / `FEATURE_LIGA = false` in `index.html` wieder ausblenden (dann verschwindet auch der Knopf „Gegner-Check“ auf den Spielkarten).
+- Gegner-Check (`viewOpponent`): nächster echter Gegner je Jugend. Zahlenvergleich, Schlüsselspielerinnen (Anteil an den Toren), 7m-Schützin, automatische Hinweise („Worauf achten?“), direkter Vergleich und gemeinsame Gegner.
+- Liga (`viewLigaAna`): meiste Tore, bester Schnitt, sicherste 7m, Schlüsselspielerin je Team, Auffälligkeiten. Filter „Nur HC VG“.
+- Unser Team (`analyse(k)` in `index.html`): feste Regeln, keine Live-KI. Vergleicht HC VG mit der Liga (Angriff, Abwehr, 7m, Strafen, Halbzeiten, erste/letzte 10 Minuten, Torverteilung, enge Spiele) und leitet daraus Stärken, Baustellen und bis zu 3 Trainingsschwerpunkte ab. Nur Mannschaftsebene, keine Kritik an einzelnen Kindern.
 
 ## Kuchen-Regel (Startseite)
 - Wer in einem Spiel das 30. Mannschaftstor für uns wirft, bringt zum nächsten Training Kuchen mit.

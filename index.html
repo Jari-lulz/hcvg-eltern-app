@@ -59,7 +59,7 @@ header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(
   @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
   .cakeline .em{display:inline-block;animation:wiggle 2.2s ease-in-out infinite;transform-origin:50% 90%}
   @keyframes wiggle{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-12deg)}80%{transform:rotate(10deg)}90%{transform:rotate(-5deg)}}
-  #view.anim .hb .fill,#view.anim .gbar s{animation:growx .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:left center}
+  #view.anim .hb .fill,#view.anim .gbar s,#view.anim .ks .bar i{animation:growx .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:left center}
   @keyframes growx{from{transform:scaleX(0)}}
   #view.anim .col .bar{animation:growy .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:bottom center}
   @keyframes growy{from{transform:scaleY(0)}}
@@ -134,6 +134,15 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .day .who.both{background:var(--tape);color:var(--tape-ink);border-color:var(--tape)}
 .train .where{font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .train .where>span{min-width:0}
+
+/* Schlüsselspielerinnen (Gegner-Check, Liga) */
+.kp{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center}
+.kn{display:flex;flex-direction:column;min-width:0}
+.kn b{font-weight:700}
+.ks{display:grid;grid-template-columns:1fr 40px;gap:8px;align-items:center;font:700 14px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
+.ks .bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.ks .bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.ai:not(.pos):not(.neg) .ic{background:var(--court)}
 
 /* Kalender-Abo */
 .cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -513,7 +522,7 @@ function nextCard(k){
     ${times}
     <div class="match"><div class="team ${home?"us":""}">${esc(sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(sn(g.away))}</div></div>
     <div class="hall"><b>${home?"Heimspiel · ":"Auswärts · "}${esc(hallName(g.loc))}</b>${esc(hallAddr(g.loc))}${g.note?`<br>${esc(g.note)}`:""}</div>
-    <div class="row">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route planen</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live-Ticker</a></div>
+    <div class="row">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route planen</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live-Ticker</a>${FEATURE_GEGNER&&!/Platzhalter/.test(home?g.away:g.home)?`<button class="btn ghost" data-gegner="${k}">🔎 Gegner-Check</button>`:""}</div>
   </section>`;
 }
 
@@ -593,7 +602,7 @@ function viewUs(){
   return hero + nextCard("C") + nextCard("D") + cakeTile() + trainingTile() + calTile();
 }
 
-const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", cal:"CD", cmp:{D:"gf",C:"gf"} };
+const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", anaMode:"team", ligaUs:false, cal:"CD", cmp:{D:"gf",C:"gf"} };
 try{const s=JSON.parse(localStorage.getItem("hcvg-sub")||"null");if(s)for(const k of ["D","C"])if(["tab","spiele","erg","stat"].includes(s[k]))st.sub[k]=s[k];}catch(e){}
 
 function subNav(k){
@@ -818,10 +827,132 @@ function analyse(k){
   return {plus,minus,focus:minus.filter(m=>m.f).slice(0,3),rank,n:LEAGUES[k].table.length,me,rg:me.rg,rows,nT:n,leader:lead&&lead[0]!==US?[sn(lead[0]),lead[7]]:null};
 }
 
+/* ---------- Gegner-Check und Liga-Analyse ---------- */
+const segLabel=(k,i)=>`${i*10}.–${Math.min((i+1)*10,LEN[k])}. Minute`;
+const realTeam=n=>!/Platzhalter/.test(n);
+// Profil einer Mannschaft aus allen Spielberichten der Liga
+function teamProfile(k,name){
+  const S=leagueStats(k), t=S.teams[name]; if(!t||!t.gp) return null;
+  let h1=0,h2=0,nh=0;
+  for(const g of ALL){ if(g.lg!==k||!g.res||(g.home!==name&&g.away!==name)) continue; const r=report(g); if(!r?.ht) continue;
+    const home=g.home===name, [a,b]=r.ht.split(":").map(Number), [c,d]=g.res.split(":").map(Number);
+    const d1=home?a-b:b-a; h1+=d1; h2+=(home?c-d:d-c)-d1; nh++; }
+  const players=S.players.filter(p=>p.team===name&&p.g>0).sort((a,b)=>b.g-a.g);
+  const tot=players.reduce((s,p)=>s+p.g,0);
+  const seven=S.players.filter(p=>p.team===name&&p.a7>0).sort((a,b)=>b.a7-a.a7||b.g7-a.g7)[0]||null;
+  const maxI=arr=>arr.reduce((bi,v,i)=>v>arr[bi]?i:bi,0);
+  const row=LEAGUES[k].table.findIndex(r=>r[0]===name);
+  return {t,h1:nh?h1/nh:0,h2:nh?h2/nh:0,nh,players,tot,seven,segBest:maxI(t.b),segWorst:maxI(t.bA),
+    rank:row+1,pts:row>=0?LEAGUES[k].table[row][7]:"–",pen:t.rg?(t.y+t.m2+t.d)/t.rg:0,q7:t.s7?t.g7/t.s7:null};
+}
+const playerRow=(p,i,val,extra="")=>`<tr class="${p.team===US?"mine":""}"><td>${i+1}</td><td class="nm">${esc(pName(p.name,p.team))}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${val}</td><td>${extra}</td></tr>`;
+const playerTable=(head,rows)=>`<div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>${head[0]}</th><th>${head[1]}</th></tr></thead><tbody>${rows||`<tr><td></td><td class="note">Noch keine Daten</td><td></td><td></td></tr>`}</tbody></table></div>`;
+
+function viewOpponent(k){
+  const g=upcoming(ALL.filter(x=>x.mine&&x.lg===k)).find(x=>x.dt&&realTeam(x.home)&&realTeam(x.away));
+  if(!g) return `<section class="sec"><div class="empty">Zurzeit ist kein Gegner angesetzt.</div></section>`;
+  const opp=g.home===US?g.away:g.home, P=teamProfile(k,opp), M=teamProfile(k,US), on=esc(sn(opp));
+  let html=`<section class="board" aria-label="Nächster Gegner"><div class="when"><span class="lg">${k}-Jugend · nächster Gegner</span><span class="count">${countdown(g.dt)}</span></div>
+    <div class="date">${on}</div>
+    <p class="hall" style="margin:0">${WDL[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}${g.time?`, ${esc(g.time)} Uhr`:""} · ${g.home===US?"Heimspiel":"Auswärts"}${P?`<br>Tabellenplatz ${P.rank} · ${esc(P.pts)} Punkte · ${P.t.w} S / ${P.t.x} U / ${P.t.l} N`:""}</p></section>`;
+  if(!P) return html+`<section class="sec"><div class="empty">Von ${on} gibt es noch keine Spielberichte.</div></section>`;
+
+  // Vergleich
+  const q=v=>v==null?"–":Math.round(v*100)+" %";
+  const rows=[["Tore pro Spiel",fmt1(M.t.gf/M.t.gp),fmt1(P.t.gf/P.t.gp)],["Gegentore pro Spiel",fmt1(M.t.ga/M.t.gp),fmt1(P.t.ga/P.t.gp)],
+    ["7-Meter-Quote",q(M.q7),q(P.q7)],["Strafen pro Spiel",fmt1(M.pen),fmt1(P.pen)],["Zur Pause vorn",`${M.t.htLead}/${M.t.htGp}`,`${P.t.htLead}/${P.t.htGp}`]];
+  html+=`<section class="sec"><h2>Direkter Zahlenvergleich</h2><div class="tbl-wrap"><table class="cmpt"><thead><tr><th>Wert</th><th>HC VG</th><th>${on}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="me">${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div></section>`;
+
+  // Schlüsselspielerinnen
+  const top=P.players.slice(0,4);
+  html+=`<section class="sec"><h2>Schlüsselspielerinnen</h2><div class="card">${top.map(p=>{const sh=P.tot?p.g/P.tot:0;return `<div class="kp"><div class="kn"><b>${esc(p.name)}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} in ${p.gp} ${p.gp===1?"Spiel":"Spielen"} · Ø ${fmt1(p.g/p.gp)}</span></div><div class="ks"><span class="bar"><i style="width:${Math.round(sh*100)}%"></i></span><span>${Math.round(sh*100)} %</span></div></div>`;}).join("")||'<span class="note">Keine Torschützinnen erfasst.</span>'}
+    ${P.seven?`<span class="note">Siebenmeter-Schützin: <b>${esc(P.seven.name)}</b> (${P.seven.g7} von ${P.seven.a7} verwandelt)</span>`:""}
+    <span class="note">Balken = Anteil an allen Toren von ${on}.</span></div></section>`;
+
+  // Hinweise
+  const S=leagueStats(k), T=Object.values(S.teams).filter(t=>t.gp), n=T.length;
+  const avgQ=T.reduce((s,t)=>s+(t.s7?t.g7/t.s7:0),0)/n, avgPen=T.reduce((s,t)=>s+(t.rg?(t.y+t.m2+t.d)/t.rg:0),0)/n;
+  const rankBy=(fn,low)=>1+T.filter(t=>low?fn(t)<fn(P.t):fn(t)>fn(P.t)).length;
+  const tips=[];
+  if(top[0]&&P.tot>=10){const s1=top[0].g/P.tot; if(s1>=0.3) tips.push(`<b>${esc(top[0].name)}</b> wirft ${Math.round(s1*100)} % aller Tore von ${on}. Auf sie besonders achten.`);
+    if(top[1]&&(top[0].g+top[1].g)/P.tot>=0.55) tips.push(`Zwei Spielerinnen (${esc(top[0].name)} und ${esc(top[1].name)}) werfen zusammen über die Hälfte der Tore.`);
+    else if(P.players.filter(p=>p.g/P.tot>=0.1).length>=4) tips.push(`Die Tore sind breit verteilt – es gibt nicht die eine Spielerin, die man abmelden kann.`);}
+  const rA=rankBy(t=>t.gf/t.gp), rD=rankBy(t=>t.ga/t.gp,true);
+  if(rA<=2) tips.push(`Torgefährlich: ${fmt1(P.t.gf/P.t.gp)} Tore pro Spiel (Platz ${rA} der Liga).`);
+  if(rD>=n-1) tips.push(`Die Abwehr wackelt: ${fmt1(P.t.ga/P.t.gp)} Gegentore pro Spiel (Platz ${rD} von ${n}).`);
+  else if(rD<=2) tips.push(`Starke Abwehr: nur ${fmt1(P.t.ga/P.t.gp)} Gegentore pro Spiel. Geduld im Angriff.`);
+  if(P.t.rg>=2){ if(P.t.b[P.segBest]>0) tips.push(`Am gefährlichsten in der ${segLabel(k,P.segBest)} (${P.t.b[P.segBest]} Tore insgesamt).`);
+    if(P.t.bA[P.segWorst]>0) tips.push(`Die meisten Gegentore kassiert ${on} in der ${segLabel(k,P.segWorst)}.`); }
+  if(P.nh>=2){ if(P.h2-P.h1>=1.5) tips.push(`Stark nach der Pause: In der 2. Halbzeit im Schnitt ${fmt1(P.h2-P.h1)} Tore besser als in der 1. – bis zum Schluss dranbleiben.`);
+    else if(P.h1-P.h2>=1.5) tips.push(`Lässt nach der Pause nach: In der 2. Halbzeit im Schnitt ${fmt1(P.h1-P.h2)} Tore schlechter – Druck hochhalten.`); }
+  if(P.q7!=null&&P.t.s7>=4){ if(P.q7<=avgQ-0.12) tips.push(`Unsicher vom Siebenmeter: nur ${P.t.g7} von ${P.t.s7} verwandelt.`); else if(P.q7>=avgQ+0.12) tips.push(`Sicher vom Siebenmeter: ${P.t.g7} von ${P.t.s7} verwandelt – Fouls im Kreis vermeiden.`); }
+  if(P.t.rg&&P.pen>=avgPen*1.3) tips.push(`Viele Strafen: ${fmt1(P.pen)} pro Spiel (Liga-Schnitt ${fmt1(avgPen)}). Überzahl nutzen!`);
+  html+=`<section class="sec"><h2>Worauf achten?</h2><div class="ais">${tips.map(t=>`<div class="ai pos"><span class="ic" aria-hidden="true" style="background:var(--court)">i</span><div><p style="margin:0;color:var(--ink)">${t}</p></div></div>`).join("")||'<div class="empty">Die Zahlen zeigen nichts Auffälliges.</div>'}</div></section>`;
+
+  // Direkter Vergleich und gemeinsame Gegner
+  const h2h=played(ALL.filter(x=>x.lg===k&&((x.home===US&&x.away===opp)||(x.home===opp&&x.away===US))));
+  const diffOf=(team,other)=>ALL.filter(x=>x.lg===k&&x.res&&((x.home===team&&x.away===other)||(x.home===other&&x.away===team))).map(x=>{const [h,a]=x.res.split(":").map(Number);return x.home===team?h-a:a-h;});
+  const common=Object.keys(S.teams).filter(t=>t!==US&&t!==opp&&realTeam(t)).map(t=>({t,us:diffOf(US,t),them:diffOf(opp,t)})).filter(c=>c.us.length&&c.them.length);
+  const sgn=v=>(v>0?"+":"")+v;
+  if(h2h.length||common.length) html+=`<section class="sec"><h2>Vergleich über die Ergebnisse</h2><div class="list">
+    ${h2h.map(x=>`<div class="g mine"><div class="d">${x.dt.getDate()}. ${MON[x.dt.getMonth()]}<small>direkt</small></div><div class="mt"><div class="t">${teamHtml(x.home)} – ${teamHtml(x.away)}</div><div class="h">Bisheriges Duell in dieser Saison</div></div><div class="res ${outcome(x)}">${esc(x.res)}</div></div>`).join("")}
+    ${common.map(c=>`<div class="g"><div class="d">vs<small>gemeinsam</small></div><div class="mt"><div class="t">${esc(sn(c.t))}</div><div class="h">HC VG ${c.us.map(sgn).join(", ")} · ${on} ${c.them.map(sgn).join(", ")}</div></div><span></span></div>`).join("")}
+  </div><span class="note">Gemeinsame Gegner: Tordifferenz beider Teams gegen dieselbe Mannschaft.</span></section>`;
+  html+=`<p class="note" style="margin:0">Automatisch aus ${P.t.rg} Spielberichten von ${on}. Bei wenigen Spielen sind die Zahlen nur ein grober Hinweis.</p>`;
+  return html;
+}
+
+function viewLigaAna(k){
+  const S=leagueStats(k), us=st.ligaUs;
+  const pool=S.players.filter(p=>p.g>0&&(!us||p.team===US));
+  let html=`<section class="sec"><div class="chips" role="group" aria-label="Filter"><button class="chip" data-ligaus="0" aria-pressed="${!us}">Ganze Liga</button><button class="chip" data-ligaus="1" aria-pressed="${us}">Nur HC VG</button></div></section>`;
+  const topG=[...pool].sort((a,b)=>b.g-a.g||a.gp-b.gp).slice(0,5);
+  html+=`<section class="sec"><h2>Die meisten Tore</h2>${playerTable(["Tore","Ø"],topG.map((p,i)=>playerRow(p,i,p.g,fmt1(p.g/p.gp))).join(""))}</section>`;
+  const topA=pool.filter(p=>p.gp>=2).sort((a,b)=>b.g/b.gp-a.g/a.gp).slice(0,5);
+  html+=`<section class="sec"><h2>Bester Schnitt pro Spiel</h2>${playerTable(["Ø","Spiele"],topA.map((p,i)=>playerRow(p,i,fmt1(p.g/p.gp),p.gp)).join(""))}<span class="note">Ab 2 Spielen.</span></section>`;
+  const top7=S.players.filter(p=>p.a7>=(us?2:4)&&(!us||p.team===US)).sort((a,b)=>b.g7/b.a7-a.g7/a.a7||b.a7-a.a7).slice(0,5);
+  html+=`<section class="sec"><h2>Sicherste Siebenmeter</h2>${playerTable(["Quote","Treffer"],top7.map((p,i)=>playerRow(p,i,Math.round(p.g7/p.a7*100)+" %",`${p.g7}/${p.a7}`)).join(""))}<span class="note">Ab ${us?2:4} Versuchen.</span></section>`;
+
+  const teams=LEAGUES[k].table.map(r=>r[0]).filter(t=>realTeam(t)&&(!us||t===US)).map(t=>teamProfile(k,t)).filter(Boolean);
+  if(us){
+    const M=teams[0];
+    if(M) html+=`<section class="sec"><h2>Wie verteilen sich unsere Tore?</h2><div class="card">${M.players.map(p=>{const sh=M.tot?p.g/M.tot:0;return `<div class="kp"><div class="kn"><b>${esc(pName(p.name,US))}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} · Ø ${fmt1(p.g/p.gp)}</span></div><div class="ks"><span class="bar"><i style="width:${Math.round(sh*100)}%"></i></span><span>${Math.round(sh*100)} %</span></div></div>`;}).join("")}</div></section>`;
+  } else {
+    html+=`<section class="sec"><h2>Schlüsselspielerinnen je Team</h2><div class="list">${teams.map(P=>{const p=P.players[0];const sh=p&&P.tot?Math.round(p.g/P.tot*100):0;
+      return `<div class="g ${P.t.name===US?"mine":""}"><div class="d">${P.rank}.<small>Platz</small></div><div class="mt"><div class="t">${teamHtml(P.t.name)}</div><div class="h">${p?`Top: <b>${esc(pName(p.name,P.t.name))}</b> ${p.g} Tore (${sh} %)`:"keine Daten"}${P.seven?` · 7m: ${esc(pName(P.seven.name,P.t.name))} ${P.seven.g7}/${P.seven.a7}`:""}</div></div><span></span></div>`;}).join("")}</div>
+      <span class="note">Prozent = Anteil an allen Toren der Mannschaft. Je höher, desto abhängiger ist das Team von dieser Spielerin.</span></section>`;
+    const pick=(fn,low,filt=()=>true)=>{const c=teams.filter(filt);return c.length?c.reduce((b,P)=>(low?fn(P)<fn(b):fn(P)>fn(b))?P:b):null;};
+    const facts=[];
+    const a=pick(P=>P.t.gf/P.t.gp); if(a) facts.push(["Torreichster Angriff",a,`${fmt1(a.t.gf/a.t.gp)} Tore pro Spiel`]);
+    const d=pick(P=>P.t.ga/P.t.gp,true); if(d) facts.push(["Beste Abwehr",d,`${fmt1(d.t.ga/d.t.gp)} Gegentore pro Spiel`]);
+    const h=pick(P=>P.h2-P.h1,false,P=>P.nh>=2); if(h&&h.h2-h.h1>0) facts.push(["Stärkste zweite Halbzeit",h,`${fmt1(h.h2-h.h1)} Tore besser als in der 1. Halbzeit`]);
+    const dep=pick(P=>P.tot?P.players[0].g/P.tot:0,false,P=>P.tot>=15); if(dep) facts.push(["Am meisten von einer Spielerin abhängig",dep,`${esc(pName(dep.players[0].name,dep.t.name))} wirft ${Math.round(dep.players[0].g/dep.tot*100)} % der Tore`]);
+    const spread=pick(P=>P.players.filter(p=>p.g/P.tot>=0.1).length,false,P=>P.tot>=15); if(spread) facts.push(["Tore am breitesten verteilt",spread,`${spread.players.filter(p=>p.g/spread.tot>=0.1).length} Spielerinnen mit mindestens 10 % der Tore`]);
+    const fair=pick(P=>P.pen,true,P=>P.t.rg>=2); if(fair) facts.push(["Fairste Mannschaft",fair,`${fmt1(fair.pen)} Strafen pro Spiel`]);
+    const rough=pick(P=>P.pen,false,P=>P.t.rg>=2); if(rough&&rough!==fair) facts.push(["Die meisten Strafen",rough,`${fmt1(rough.pen)} pro Spiel`]);
+    const sv=pick(P=>P.q7??0,false,P=>P.t.s7>=5); if(sv) facts.push(["Sicherste Siebenmeter",sv,`${sv.t.g7} von ${sv.t.s7} verwandelt`]);
+    html+=`<section class="sec"><h2>Auffälligkeiten in der Liga</h2><div class="ais">${facts.map(([t,P,x])=>`<div class="ai ${P.t.name===US?"pos":""}"><span class="ic" aria-hidden="true" style="background:${P.t.name===US?"var(--win)":"var(--court)"}">${P.rank}</span><div><b>${esc(t)}: ${esc(sn(P.t.name))}</b><p>${x}</p></div></div>`).join("")}</div><span class="note">Zahl im Kreis = Tabellenplatz.</span></section>`;
+  }
+  html+=`<p class="note" style="margin:0">Alle Werte aus den genehmigten Spielberichten der Liga. Namen sind gekürzt.</p>`;
+  return html;
+}
+
+/* Schalter: Liga-Analyse und Gegner-Check lassen sich hier wieder ausblenden (false) */
+const FEATURE_GEGNER=true, FEATURE_LIGA=true;
+
 function viewAnalysis(){
-  const k=st.ana, A=analyse(k);
+  const k=st.ana;
+  const modes=[["team","Unser Team"]].concat(FEATURE_GEGNER?[["gegner","Gegner-Check"]]:[],FEATURE_LIGA?[["liga","Liga"]]:[]);
+  if(!modes.some(m=>m[0]===st.anaMode)) st.anaMode="team";
   const ch=id=>`<button class="chip" data-ana="${id}" aria-pressed="${k===id}">${id}-Jugend</button>`;
-  let html=`<section class="sec"><div class="sechead"><h2>Datenauswertung</h2><div class="chips" role="group" aria-label="Mannschaft">${ch("D")}${ch("C")}</div></div>`;
+  let html=`<section class="sec"><div class="sechead"><h2>Analyse</h2><div class="chips" role="group" aria-label="Mannschaft">${ch("D")}${ch("C")}</div></div>
+    ${modes.length>1?`<div class="sub" role="tablist" aria-label="Bereich">${modes.map(([id,l])=>`<button role="tab" data-anamode="${id}" aria-selected="${st.anaMode===id}">${l}</button>`).join("")}</div>`:""}</section>`;
+  return html+(st.anaMode==="gegner"?viewOpponent(k):st.anaMode==="liga"?viewLigaAna(k):viewTeamAna(k));
+}
+
+function viewTeamAna(k){
+  const A=analyse(k);
+  let html=`<section class="sec">`;
   if(!A) return html+`<div class="empty">Noch keine Spiele mit Spielbericht.</div></section>`;
   const m=A.me;
   const lead=A.plus[0], weak=A.minus[0];
@@ -841,8 +972,8 @@ function viewAnalysis(){
 
 /* ---------- Steuerung ---------- */
 let current="us";
-try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C","ana"].includes(s))current=s;const a=localStorage.getItem("hcvg-ana");if(a==="C"||a==="D")st.ana=a;}catch(e){}
-function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-ana",st.ana);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
+try{const s=localStorage.getItem("hcvg-tab");if(s&&["us","D","C","ana"].includes(s))current=s;const a=localStorage.getItem("hcvg-ana");if(a==="C"||a==="D")st.ana=a;const am=localStorage.getItem("hcvg-anamode");if(am)st.anaMode=am;}catch(e){}
+function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setItem("hcvg-ana",st.ana);localStorage.setItem("hcvg-anamode",st.anaMode);localStorage.setItem("hcvg-sub",JSON.stringify(st.sub));}catch(e){}}
 // Einblend-Animation nur beim Wechsel von Seite/Unterreiter, nicht bei Filter- oder Sortierknöpfen
 let animNext=true;
 function render(){
@@ -865,6 +996,9 @@ view.addEventListener("click",e=>{
   if(b.dataset.topus){st.topUs[k]=b.dataset.topus==="1";render();return;}
   if(b.dataset.ana){st.ana=b.dataset.ana;save();animNext=true;render();return;}
   if(b.dataset.cal){st.cal=b.dataset.cal;render();return;}
+  if(b.dataset.anamode){st.anaMode=b.dataset.anamode;save();animNext=true;render();return;}
+  if(b.dataset.ligaus){st.ligaUs=b.dataset.ligaus==="1";render();return;}
+  if(b.dataset.gegner){current="ana";st.ana=b.dataset.gegner;st.anaMode="gegner";save();animNext=true;render();window.scrollTo({top:0});return;}
   if(b.dataset.copycal){
     const url=calUrls().https, done=t=>{b.textContent=t;setTimeout(()=>b.textContent="Adresse kopieren",2500);};
     try{navigator.clipboard.writeText(url).then(()=>done("Kopiert ✓"),()=>{prompt("Kalender-Adresse:",url);});}catch(e){prompt("Kalender-Adresse:",url);}
