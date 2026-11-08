@@ -183,6 +183,26 @@ function Parse-Report([string]$html) {
   return [ordered]@{ ht = $ht; sr = $sr; h = (& $side 0); a = (& $side 1); ev = $ev }
 }
 
+# Kuchen-Regel: Wer hat in einem Spiel das 30. Tor fuer uns geworfen?
+# Steht nicht im nuLiga-Bericht, aber in der nuScore-Ereignisliste (mit Spielstand und Werferin).
+$Us = 'HC Vorpommern-Greifswald'
+function Get-Scorer30([string]$mid, [bool]$usHome) {
+  try {
+    Start-Sleep -Milliseconds 300
+    $r = Invoke-WebRequest -UseBasicParsing "https://hbde-live.liga.nu/nuScoreLiveRestBackend/api/1/events/$mid" -Headers @{ 'User-Agent' = 'HCVG-Eltern-App (Spielplan-Update)' }
+    $e = ([Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())) | ConvertFrom-Json
+    foreach ($x in ($e.events | Sort-Object idx)) {
+      if ($x.event -ne 4 -and $x.event -ne 5) { continue }        # 4 = Tor, 5 = 7m-Tor
+      if ([bool]$x.teamHome -ne $usHome) { continue }
+      $pts = if ($usHome) { $x.pointsHome } else { $x.pointsGuest }
+      if ($pts -eq 30 -and $x.personFirstname -and $x.personFirstname -ne 'Anonym') {
+        return (ShortName "$($x.personLastname), $($x.personFirstname)")
+      }
+    }
+  } catch { Write-Host "  nuScore $mid nicht erreichbar" }
+  return ''
+}
+
 $out = [ordered]@{
   updated = (Get-Date).ToString('dd.MM.yyyy, HH:mm') + ' Uhr'
   leagues = [ordered]@{}
@@ -197,9 +217,24 @@ foreach ($key in $Leagues.Keys) {
   $table = Parse-Table $tablePage
   $games = Parse-Games $gamesPage
   $reports = [ordered]@{}
+  $cake = [ordered]@{}
   $outGames = @()
   foreach ($g in $games) {
     $mid = $g[7]
+    if ($mid -and $g[5] -and ($g[3] -eq $Us -or $g[4] -eq $Us)) {
+      $usHome = $g[3] -eq $Us
+      $ourGoals = [int](($g[5] -split ':')[$(if ($usHome) { 0 } else { 1 })])
+      if ($ourGoals -ge 30) {
+        $cakeFile = Join-Path $CacheDir "cake-$mid.txt"
+        if (Test-Path $cakeFile) { $who = [IO.File]::ReadAllText($cakeFile, [Text.Encoding]::UTF8).Trim() }
+        else {
+          Write-Host "  30. Tor in Spiel $mid"
+          $who = Get-Scorer30 $mid $usHome
+          if ($who -and $g[8]) { [IO.File]::WriteAllText($cakeFile, $who, (New-Object Text.UTF8Encoding $false)) }
+        }
+        if ($who) { $cake[$mid] = $who }
+      }
+    }
     if ($mid -and $g[5]) {
       $cacheFile = Join-Path $CacheDir "$mid.json"
       $rep = $null
@@ -220,7 +255,7 @@ foreach ($key in $Leagues.Keys) {
     elseif ($g[9]) { $p = $g[9].Trim() -split ' '; if ($p.Count -ge 2) { $refShort = "$($p[1]) $($p[0].Substring(0,1))." } else { $refShort = $g[9] } }
     $outGames += , @($g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $refShort)
   }
-  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports }
+  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports; cake = $cake }
 }
 foreach ($k in $HallNames.Keys) { $out.halls[$k] = $HallNames[$k] }
 

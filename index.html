@@ -511,40 +511,37 @@ function nextCard(k){
   </section>`;
 }
 
-/* Kuchen-Regel: Wer in einer Jugend ihr 30. Saisontor wirft, bringt zum nächsten Training einen Kuchen mit. */
-const CAKE_GOALS=30, CAKE_FRESH_DAYS=14;
-function cakeData(){
-  const done=[], near=[];
-  for(const k of ["D","C"]){
-    const games=ALL.filter(g=>g.lg===k&&g.mine&&g.res&&report(g)).sort((a,b)=>a.dt-b.dt);
-    const cum={}, names={};
-    for(const g of games){
-      const s=report(g)[g.home===US?"h":"a"]; if(!s) continue;
-      for(const p of s.p||[]){
-        const key=p[2]||p[1], before=cum[key]||0; cum[key]=before+p[3]; names[key]=p[1];
-        if(before<CAKE_GOALS&&cum[key]>=CAKE_GOALS) done.push({name:p[1],k,dt:g.dt,opp:sn(g.home===US?g.away:g.home)});
-      }
-    }
-    Object.entries(cum).filter(([,v])=>v<CAKE_GOALS&&v>0).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([key,v])=>near.push({name:names[key],k,g:v}));
+/* Kuchen-Regel: Wer in einem Spiel das 30. Tor für uns wirft, bringt zum nächsten Training Kuchen mit.
+   Die Werferin kommt aus data.js (leagues[k].cake = {Bericht-ID: Name}, aus der nuScore-Ereignisliste). */
+const CAKE_FRESH_DAYS=10;   // so lange steht der Hinweis nach dem Spiel auf der Startseite
+function cakeGames(k){
+  const map=LEAGUES[k].cake||{};
+  return ALL.filter(g=>g.lg===k&&g.mine&&g.res&&map[g.mid]).sort((a,b)=>a.dt-b.dt)
+    .map(g=>({name:map[g.mid],k,dt:g.dt,opp:sn(g.home===US?g.away:g.home),home:g.home===US,res:g.res}));
+}
+// Fällig ist nur das letzte Spiel je Jugend – also höchstens zwei Kuchen (D und C).
+function cakeDue(){
+  const out=[], nowT=Date.now();
+  for(const k of ["C","D"]){
+    const last=played(ALL.filter(g=>g.lg===k&&g.mine))[0];
+    const name=last&&(LEAGUES[k].cake||{})[last.mid];
+    if(name&&nowT-last.dt.getTime()<=CAKE_FRESH_DAYS*864e5) out.push({name,k,dt:last.dt,opp:sn(last.home===US?last.away:last.home),home:last.home===US});
   }
-  return {done:done.sort((a,b)=>b.dt-a.dt),near:near.sort((a,b)=>b.g-a.g)};
+  return out;
 }
 const CAKE_LINES=[
-  "Das Torgesetz ist eindeutig: 30 Tore = 1 Kuchen. Die Mannschaft hat schon die Gabeln gezückt.",
-  "Erst Torjägerin, jetzt Bäckerin. Gern mit extra Streuseln!",
-  "30 Mal hat das Netz gezappelt – jetzt darf der Kuchen zappeln. Mmh!",
-  "Glückwunsch zum 30. Saisontor! Die Torhüterinnen der Liga atmen auf, die Mannschaft hat Hunger."
+  "Der Rest der Mannschaft atmet auf – und hält beim nächsten Training schon die Gabel bereit.",
+  "Der Rest der Mannschaft atmet auf. Handball-Gesetz §30: Wer das 30. Tor wirft, backt. Einspruch zwecklos!",
+  "Der Rest der Mannschaft atmet auf und gibt schon mal die Bestellung auf: gern mit Schokolade!",
+  "Der Rest der Mannschaft atmet auf. Erst Torjägerin, jetzt Bäckerin – das nennt man Allrounderin."
 ];
+const cakeLine=c=>CAKE_LINES[[...c.name+c.k].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAKE_LINES.length];
 function cakeTile(){
-  const {done,near}=cakeData(), nowT=Date.now();
-  const fresh=done.filter(c=>nowT-c.dt.getTime()<=CAKE_FRESH_DAYS*864e5);
-  const line=c=>CAKE_LINES[[...c.name].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAKE_LINES.length];
-  let html=`<section class="cake" aria-label="Kuchen-Regel"><div class="top"><span class="em" aria-hidden="true">🎂</span><div><h2>Kuchen-Alarm</h2><span class="note">Wer ihr ${CAKE_GOALS}. Saisontor wirft, bringt zum nächsten Training einen Kuchen mit.</span></div></div>`;
-  html+=fresh.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} gegen ${esc(c.opp)}</small><b>${esc(pName(c.name,US))} bringt Kuchen mit!</b><span>${esc(line(c))}</span></div>`).join("");
-  if(near.length) html+=`<div class="near"><small>Auf Kuchenkurs</small>${near.slice(0,3).map(p=>`<div class="nr"><span class="nm">${esc(pName(p.name,US))} <i>${p.k}</i></span><span class="bar"><i style="width:${Math.round(p.g/CAKE_GOALS*100)}%"></i></span><span class="v">noch ${CAKE_GOALS-p.g}</span></div>`).join("")}</div>`;
-  const old=done.filter(c=>!fresh.includes(c));
-  if(old.length) html+=`<div class="hall-f"><small>Schon gebacken</small>${old.map(c=>`<span>${esc(pName(c.name,US))} (${c.k}, ${c.dt.getDate()}. ${MON[c.dt.getMonth()]})</span>`).join(" · ")}</div>`;
-  return html+`</section>`;
+  const due=cakeDue();
+  if(!due.length) return "";
+  return `<section class="cake" aria-label="Kuchen-Alarm"><div class="top"><span class="em" aria-hidden="true">🎂</span><div><h2>Kuchen-Alarm</h2><span class="note">Wer im Spiel das 30. Tor für uns wirft, bringt zum nächsten Training Kuchen mit.</span></div></div>
+    ${due.map(c=>`<div class="due"><small>${c.k}-Jugend · ${WD[c.dt.getDay()]} ${c.dt.getDate()}. ${MON[c.dt.getMonth()]} ${c.home?"gegen":"bei"} ${esc(c.opp)}</small><b>${esc(pName(c.name,US))} bringt Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c))}</span></div>`).join("")}
+  </section>`;
 }
 
 function viewUs(){
@@ -666,6 +663,10 @@ function viewStats(k){
       const r=report(g); const who=g.res?(r?.sr?.join(", ")||"–"):g.ref; const opp=g.home===US?g.away:g.home;
       return `<div class="g"><div class="d">${g.dt?`${g.dt.getDate()}. ${MON[g.dt.getMonth()]}`:"offen"}<small>${g.res?esc(g.res):"angesetzt"}</small></div><div class="mt"><div class="t">${g.home===US?"vs":"bei"} ${esc(sn(opp))}</div><div class="h">${esc(who)}</div></div><span></span></div>`;
     }).join("")||'<div class="empty">Noch keine Angaben.</div>'}</div></section>`;
+
+  // Kuchen-Chronik
+  const cg=cakeGames(k).reverse();
+  html+=`<section class="sec"><h2>Kuchen-Chronik 🎂</h2><div class="list">${cg.map(c=>`<div class="g"><div class="d">${c.dt.getDate()}. ${MON[c.dt.getMonth()]}<small>${esc(c.res)}</small></div><div class="mt"><div class="t">${esc(pName(c.name,US))}</div><div class="h">30. Tor ${c.home?"gegen":"bei"} ${esc(c.opp)}</div></div><span></span></div>`).join("")||'<div class="empty">Noch kein Spiel mit 30 Toren – der Ofen bleibt kalt.</div>'}</div></section>`;
 
   html+=`<p class="note" style="margin:0">Alle Werte aus den genehmigten Spielberichten auf nuLiga. Namen sind zum Schutz der Kinder gekürzt.</p>`;
   return html;

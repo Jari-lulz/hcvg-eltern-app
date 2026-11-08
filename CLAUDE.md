@@ -40,8 +40,10 @@ powershell -ExecutionPolicy Bypass -File tools\update-data.ps1
 - Analyse (`analyse(k)` in `index.html`): feste Regeln, keine Live-KI. Vergleicht HC VG mit der Liga (Angriff, Abwehr, 7m, Strafen, Halbzeiten, erste/letzte 10 Minuten, Torverteilung, enge Spiele) und leitet daraus Stärken, Baustellen und bis zu 3 Trainingsschwerpunkte ab. Nur Mannschaftsebene, keine Kritik an einzelnen Kindern.
 
 ## Kuchen-Regel (Startseite)
-- Wer in einer Jugend ihr 30. Saisontor wirft (`CAKE_GOALS`), bringt zum nächsten Training Kuchen mit. Gezählt wird je Jugend getrennt, aus den Spielberichten.
-- `cakeTile()`: großer gelber Hinweis für 14 Tage (`CAKE_FRESH_DAYS`) nach dem Spiel, danach unter „Schon gebacken“. Dazu die 3 Spielerinnen, die am nächsten dran sind.
+- Wer in einem Spiel das 30. Mannschaftstor für uns wirft, bringt zum nächsten Training Kuchen mit.
+- Die Werferin steht nicht im nuLiga-Bericht. `Get-Scorer30` im Skript liest sie aus der nuScore-Ereignisliste (`.../nuScoreLiveRestBackend/api/1/events/<Bericht-ID>`, Code 4 = Tor, 5 = 7m-Tor, mit Spielstand und Name). Ergebnis: `leagues[k].cake = { Bericht-ID: "Vorname N." }`, zwischengespeichert in `tools/cache/cake-<id>.txt`.
+- Startseite (`cakeTile()`): nur wenn im letzten Spiel einer Jugend das 30. Tor fiel und das Spiel höchstens 10 Tage her ist (`CAKE_FRESH_DAYS`). Höchstens zwei Einträge (D und C). Sonst ist die Kachel ausgeblendet.
+- Statistik je Jugend: „Kuchen-Chronik“ mit allen bisherigen 30. Toren.
 
 ## Bilder
 - `img/logo.webp` (Vereinswappen, Kopf + Favicon), `img/team-kreis.jpg` (Mannschaftskreis von oben, kaum Gesichter; Banner auf der Startseite, auf 900px verkleinert).
