@@ -147,12 +147,12 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .board.nc{padding:10px 14px;gap:7px}
 .fold{display:flex;flex-direction:column;gap:10px}
 /* Kaderübersicht */
-.kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.kp2{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.kader{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:6px}
+.kp2{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:0}
 .kp2 div{display:flex;flex-direction:column;min-width:0}
 .kp2 b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kp2 .note{font-size:12px}
-.kp2 .pt{font:700 12px/1.3 var(--body);color:var(--accent)}
+.kp2 .note{font-size:12px;white-space:nowrap}
+.kp2 .pt{font:400 12px/1.35 var(--body);color:var(--ink);margin-top:2px}
 .nw{white-space:nowrap}
 .kn2{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ours);color:var(--on-ours);font:800 16px/1 var(--display)}
 .hero .cap span u{text-decoration:none;color:var(--tape);font-weight:700;white-space:nowrap}
@@ -708,11 +708,15 @@ function calTile(){
 }
 
 // Powertime: 10-Minuten-Abschnitt(e) mit den meisten Toren der Spielerin (ab 2 Toren mit Zeitangabe)
+// Torhüterinnen (von Hand gepflegt, Namen wie im Spielbericht): statt Torphase "Hält das Team im Spiel"
+const KEEPERS={D:["Larissa L.","Frieda D."],C:["Marleen K."]};
+const isKeeper=(k,p)=>(KEEPERS[k]||[]).includes(p.name);
+
 function powertime(k,p){
   if(!p.b) return "";
-  const tracked=p.b.reduce((s,v)=>s+v,0); if(tracked<2) return "";
+  const tracked=p.b.reduce((s,v)=>s+v,0); if(tracked<1) return "";
   const mx=Math.max(...p.b);
-  return p.b.map((v,i)=>v===mx?`<span class="nw">${i*10}–${Math.min((i+1)*10,LEN[k])}′</span>`:null).filter(Boolean).join(" & ");
+  return p.b.map((v,i)=>v===mx?`<span class="nw">${i*10} bis ${Math.min((i+1)*10,LEN[k])}</span>`:null).filter(Boolean).join(" und ");
 }
 
 // Kader: alle Spielerinnen, die in einem Spielbericht stehen, je Jugend nach Rückennummer
@@ -721,9 +725,9 @@ function viewKader(){
   for(const k of ["D","C"]){
     const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
     html+=`<section class="sec"><div class="sechead"><h2>${k}-Jugend</h2><span class="note">${ps.length} Spielerinnen</span></div>
-      <div class="kader">${ps.map(p=>{const pt=powertime(k,p);return `<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${pt?`<span class="pt">⚡ Powertime ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
+      <div class="kader">${ps.map(p=>{const pt=powertime(k,p);return `<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${isKeeper(k,p)?`<span class="pt">🧤 Torhüterin · Hält das Team im Spiel</span>`:pt?`<span class="pt">Torgefährlich in Minute ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
   }
-  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene. ⚡ Powertime = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
+  html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Rückennummer = die am häufigsten getragene. „Torgefährlich in Minute …“ = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
   return html;
 }
 
@@ -1146,7 +1150,7 @@ let animNext=true;
 function sizeFold(){
   const f=view.querySelector(".fold"); if(!f) return;
   f.style.minHeight="";
-  const need=window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-4;
+  const need=window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)+22;   // +22: Kuchen-Alarm sicher unterhalb (auch hinter Browserleisten)
   if(f.offsetHeight<need) f.style.minHeight=need+"px";
 }
 window.addEventListener("resize",()=>{ if(current==="us") sizeFold(); });
