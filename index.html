@@ -245,6 +245,12 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .cakeline.due{background:var(--tape);border-style:solid;color:var(--tape-ink)}
 .cakeline.due small,.cakeline.due span{color:var(--tape-ink);opacity:.8}
 .cakeline.due b i{background:rgba(0,0,0,.12);color:var(--tape-ink)}
+.shareapp{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;cursor:pointer}
+.shareapp .ic{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ours);color:var(--on-ours)}
+.shareapp .ic svg{width:18px;height:18px}
+.shareapp span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.shareapp b{font:800 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.shareapp small{font-size:13px;color:var(--muted)}
 .cakeline.capri{border-color:#f28c28}
 .cakeline.capri.due{background:#f28c28;color:#1d1200}
 .cakeline.capri.due small,.cakeline.capri.due span{color:#1d1200}
@@ -700,7 +706,6 @@ function inviteText(k){
     `📅 ${WDL[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}`+(g.time?`, Anwurf ${g.time} Uhr`:"")];
   if(g.time) lines.push(`⏰ Treff der Mannschaft: ${hhmm(new Date(g.dt-3600e3))} Uhr`);
   if(g.loc){ lines.push(`📍 ${hallName(g.loc)}${hallAddr(g.loc)?", "+hallAddr(g.loc):""}`); lines.push(`🗺️ Route: ${mapsUrl(g.loc)}`); }
-  lines.push(`Alle Infos zum Team: ${new URL(".",location.href).href}`);
   return lines.join("\n");
 }
 
@@ -824,11 +829,13 @@ function viewKader(){
   return html;
 }
 
+// App weitergeben (Oma, Opa, Tante, Freunde): teilt nur den Link mit kurzem Text
+const shareAppTile=()=>`<button class="shareapp" data-shareapp="1"><span class="ic">${ICON_SHARE}</span><span><b>App teilen</b><small>Mit Oma, Opa, Familie &amp; Freunden, z. B. per WhatsApp</small></span></button>`;
 function viewUs(){
   const hero=`<figure class="hero" style="margin:0" data-kader="1" role="button" tabindex="0" aria-label="Mannschaft anzeigen"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
     <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg · <u>Mannschaft ansehen ›</u></span></figcaption></figure>`;
   // .fold = erster Bildschirm (Foto + beide Spiele); wird per sizeFold() auf Bildschirmhöhe gestreckt
-  return `<div class="fold">${hero}${nextCard("C")}${nextCard("D")}</div>` + cakeTile() + capriTile() + trainingTile() + calTile();
+  return `<div class="fold">${hero}${nextCard("C")}${nextCard("D")}</div>` + cakeTile() + capriTile() + shareAppTile() + trainingTile() + calTile();
 }
 
 const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", anaMode:"team", ligaUs:false, cal:"CD", cmp:{D:"gf",C:"gf"} };
@@ -1279,6 +1286,13 @@ view.addEventListener("click",e=>{
   if(b.dataset.cal){st.cal=b.dataset.cal;render();return;}
   if(b.dataset.anamode){st.anaMode=b.dataset.anamode;save();animNext=true;render();return;}
   if(b.dataset.ligaus){st.ligaUs=b.dataset.ligaus==="1";render();return;}
+  if(b.dataset.shareapp){
+    const url=new URL(".",location.href).href;
+    const text="Hier ist die App unserer Handball-Mädels vom HC Vorpommern-Greifswald 🤾‍♀️ Mit allen Spielen, Treffzeiten, Hallen mit Route und Ergebnissen. Einfach antippen:";
+    if(navigator.share){ navigator.share({title:"HC Vorpommern-Greifswald – Mannschafts-App",text,url}).catch(()=>{}); }
+    else window.open("https://wa.me/?text="+encodeURIComponent(text+"\n"+url),"_blank","noopener");
+    return;
+  }
   if(b.dataset.share){
     const text=inviteText(b.dataset.share);
     if(navigator.share){ navigator.share({title:"Einladung zum Handballspiel",text}).catch(()=>{}); }
