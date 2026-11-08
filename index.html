@@ -376,8 +376,7 @@ function momentum(r,len,persp,upName,downName){
   </svg>
   <span class="zt up">▲ ${esc(upName)} führt</span><span class="zt mid">Mittellinie = Gleichstand</span><span class="zt dn">▼ ${esc(downName)} führt</span>
   </div>
-  <span></span><div class="lbl"><span>Anpfiff</span><span>Halbzeit</span><span>${len}. Min.</span></div></div>
-  <p class="mx">Die schwarze Linie zeigt den <b>Torabstand</b> im Laufe des Spiels, jede Stufe ist ein Tor. Im <b class="up">grünen Bereich oben</b> führt ${esc(upName)}, im <b class="dn">roten Bereich unten</b> ${esc(downName)}. Je weiter weg von der Mittellinie, desto größer der Vorsprung. Die Zahlen links zeigen, wie viele Tore das sind.</p></div>`;
+  <span></span><div class="lbl"><span>Anpfiff</span><span>Halbzeit</span><span>${len}. Min.</span></div></div></div>`;
 }
 function scorerList(name,s){
   const list=(s?.p||[]).filter(p=>p[3]>0).sort((a,b)=>b[3]-a[3]);
