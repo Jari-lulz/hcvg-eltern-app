@@ -154,6 +154,20 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .kc .ks{grid-template-columns:1fr 34px}
 .kc.us .ks .bar i{background:var(--win)}
 .kc .ks .bar i{background:var(--loss)}
+.nr{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;margin-right:6px;border-radius:50%;background:var(--court);color:var(--court-ink);font:800 12px/1 var(--display);vertical-align:1px}
+.kc.us .nr,tr.mine .nr{background:var(--win)}
+.sb{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--loss);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.sbh{display:flex;gap:12px;align-items:center}
+.sbh div{display:flex;flex-direction:column;min-width:0}
+.sbh b{font:800 20px/1.1 var(--display);text-transform:uppercase}
+.sbn{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--loss);color:#fff;font:800 24px/1 var(--display)}
+.sbp{display:flex;gap:6px;align-items:flex-end}
+.sbp div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.sbp i{display:block;flex:none;width:70%;max-width:30px;background:var(--loss);opacity:.8;border-radius:4px 4px 0 0;min-height:2px}
+.sbp .sbv{font:700 12px/1 var(--display);color:var(--muted)}
+.sbp small{font-size:11px;color:var(--muted)}
+.sbt{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.sbt b{font-weight:700}
 
 /* Kalender-Abo */
 .cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -481,22 +495,28 @@ function leagueStats(k){
     if(hg>ag){H.w++;A.l++;}else if(hg<ag){A.w++;H.l++;}else{H.x++;A.x++;}
     for(const [t,o,diff] of [[H,A,hg-ag],[A,H,ag-hg]]) if(diff>0 && (!t.best||diff>t.best.diff)) t.best={diff,g,vs:o.name};
     const r=report(g); if(!r) continue;
-    for(const [side,t,name] of [["h",H,g.home],["a",A,g.away]]){
+    const byNr={1:{},2:{}};   // Rückennummer -> Spielerin, je Seite in diesem Spiel
+    for(const [side,t,name,sn_] of [["h",H,g.home,1],["a",A,g.away,2]]){
       const s=r[side]; if(!s) continue;
       t.rg++; t.s7+=s.s7; t.g7+=s.g7; t.y+=s.y; t.m2+=s.m2; t.d+=s.d; t.to+=s.to;
       for(const p of s.p||[]){
         const key=p[2]||name+"|"+p[1];
-        const pl=players[key]||(players[key]={name:p[1],team:name,gp:0,g:0,g7:0,a7:0,m2:0,d:0});
+        const pl=players[key]||(players[key]={name:p[1],team:name,gp:0,g:0,g7:0,a7:0,m2:0,d:0,nrs:{},b:Array(nb).fill(0),h1:0,h2:0,first:0,late:0});
         pl.gp++;pl.g+=p[3];pl.g7+=p[4];pl.a7+=p[5];pl.m2+=p[7];pl.d+=p[8];
+        if(p[0]) { pl.nrs[p[0]]=(pl.nrs[p[0]]||0)+1; byNr[sn_][p[0]]=pl; }
       }
     }
     if(r.ht){const [a,b]=r.ht.split(":").map(Number);H.htGp++;A.htGp++;if(a>b)H.htLead++;else if(b>a)A.htLead++;}
-    for(const [s,side,c] of r.ev||[]){
+    const half=LEN[k]*30;
+    for(const [s,side,c,nr] of r.ev||[]){
       if(c!=="g"&&c!=="7g") continue;
       const i=Math.min(nb-1,Math.floor(Math.max(0,s-1)/600));
       if(side===1){H.b[i]++;A.bA[i]++;} else if(side===2){A.b[i]++;H.bA[i]++;}
+      const pl=nr&&byNr[side]?.[nr];   // Torzeit der Werferin zuordnen
+      if(pl){ pl.b[i]++; if(s<=half) pl.h1++; else pl.h2++; if(s<=600) pl.first++; if(s>LEN[k]*60-600) pl.late++; }
     }
   }
+  for(const pl of Object.values(players)){ const e=Object.entries(pl.nrs||{}).sort((a,b)=>b[1]-a[1]); pl.nr=e.length?+e[0][0]:null; }
   return statCache[k]={teams,players:Object.values(players),nb};
 }
 
@@ -856,7 +876,23 @@ function teamProfile(k,name){
   return {t,h1:nh?h1/nh:0,h2:nh?h2/nh:0,nh,players,tot,seven,segBest:maxI(t.b),segWorst:maxI(t.bA),
     rank:row+1,pts:row>=0?LEAGUES[k].table[row][7]:"–",pen:t.rg?(t.y+t.m2+t.d)/t.rg:0,q7:t.s7?t.g7/t.s7:null};
 }
-const playerRow=(p,i,val,extra="")=>`<tr class="${p.team===US?"mine":""}"><td>${i+1}</td><td class="nm">${esc(pName(p.name,p.team))}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${val}</td><td>${extra}</td></tr>`;
+const nrTag=p=>p&&p.nr!=null?`<span class="nr">${p.nr}</span>`:"";
+// Steckbrief-Merkmale einer Spielerin aus Torzeiten, 7m und Anteil
+function playerTraits(k,p,tot){
+  const tr=[], tracked=p.b?p.b.reduce((s,v)=>s+v,0):0;
+  if(tot&&p.g/tot>=0.3) tr.push(["Torjägerin",`${Math.round(p.g/tot*100)} % der Tore ihres Teams`]);
+  if(p.a7>=3) tr.push(["7m-Schützin",`${p.g7} von ${p.a7} verwandelt`]);
+  if(tracked>=5){
+    const bi=p.b.reduce((m,v,i)=>v>p.b[m]?i:m,0);
+    tr.push(["Gefährlichste Phase",`${segLabel(k,bi)} (${p.b[bi]} Tore)`]);
+    if(p.h2>=p.h1*1.6&&p.h2-p.h1>=3) tr.push(["Stark nach der Pause",`${p.h1} Tore in der 1., ${p.h2} in der 2. Halbzeit`]);
+    else if(p.h1>=p.h2*1.6&&p.h1-p.h2>=3) tr.push(["Stark vor der Pause",`${p.h1} Tore in der 1., ${p.h2} in der 2. Halbzeit`]);
+    if(p.first/tracked>=0.3) tr.push(["Blitzstarterin",`${p.first} Tore in den ersten 10 Minuten`]);
+    if(p.late/tracked>=0.3) tr.push(["Schlussphase",`${p.late} Tore in den letzten 10 Minuten`]);
+  }
+  return tr;
+}
+const playerRow=(p,i,val,extra="")=>`<tr class="${p.team===US?"mine":""}"><td>${i+1}</td><td class="nm">${nrTag(p)}${esc(pName(p.name,p.team))}<br><span class="note">${esc(sn(p.team))}</span></td><td class="pts">${val}</td><td>${extra}</td></tr>`;
 const playerTable=(head,rows)=>`<div class="tbl-wrap"><table class="ptbl"><thead><tr><th>#</th><th>Name</th><th>${head[0]}</th><th>${head[1]}</th></tr></thead><tbody>${rows||`<tr><td></td><td class="note">Noch keine Daten</td><td></td><td></td></tr>`}</tbody></table></div>`;
 
 function viewOpponent(k){
@@ -878,22 +914,32 @@ function viewOpponent(k){
   // Schlüsselspielerinnen: Gegner links, unsere rechts (Platz 1 gegen Platz 1 usw.)
   const top=P.players.slice(0,4);
   const kcell=(p,tot,team)=>{ if(!p) return `<div class="kc"></div>`; const sh=tot?Math.round(p.g/tot*100):0;
-    return `<div class="kc ${team===US?"us":""}"><b>${esc(pName(p.name,team))}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} · Ø ${fmt1(p.g/p.gp)}</span><div class="ks"><span class="bar"><i style="width:${sh}%"></i></span><span>${sh} %</span></div></div>`; };
+    return `<div class="kc ${team===US?"us":""}"><b>${nrTag(p)}${esc(pName(p.name,team))}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} · Ø ${fmt1(p.g/p.gp)}</span><div class="ks"><span class="bar"><i style="width:${sh}%"></i></span><span>${sh} %</span></div></div>`; };
   const n4=Math.max(top.length,Math.min(4,M.players.length));
-  const sevenTxt=(s,team)=>s?`${esc(pName(s.name,team))} (${s.g7}/${s.a7})`:"–";
+  const sevenTxt=(s,team)=>s?`${s.nr!=null?"#"+s.nr+" ":""}${esc(pName(s.name,team))} (${s.g7}/${s.a7})`:"–";
   html+=`<section class="sec"><h2>Schlüsselspielerinnen im Duell</h2><div class="card">
     <div class="kduel head"><span>${on}</span><span>HC VG</span></div>
     ${Array.from({length:n4},(_,i)=>`<div class="kduel"><i class="kr">${i+1}</i>${kcell(top[i],P.tot,opp)}${kcell(M.players[i],M.tot,US)}</div>`).join("")||'<span class="note">Keine Torschützinnen erfasst.</span>'}
     <div class="kduel seven"><span class="note">7m: ${sevenTxt(P.seven,opp)}</span><span class="note">7m: ${sevenTxt(M.seven,US)}</span></div>
-    <span class="note">Prozent = Anteil an allen Toren der eigenen Mannschaft.</span></div></section>`;
+    <span class="note">Zahl im Kreis = Rückennummer. Prozent = Anteil an allen Toren der eigenen Mannschaft.</span></div></section>`;
+
+  // Steckbriefe der gefährlichsten Gegnerinnen
+  const nb=leagueStats(k).nb;
+  html+=`<section class="sec"><h2>Steckbriefe: auf diese Nummern achten</h2>${top.slice(0,3).map(p=>{
+    const tracked=p.b.reduce((s,v)=>s+v,0), mx=Math.max(1,...p.b), tr=playerTraits(k,p,P.tot);
+    return `<div class="sb"><div class="sbh"><span class="sbn">${p.nr??"?"}</span><div><b>${esc(p.name)}</b><span class="note">${on} · ${p.g} Tore in ${p.gp} ${p.gp===1?"Spiel":"Spielen"} · Ø ${fmt1(p.g/p.gp)}</span></div></div>
+      ${tracked?`<div class="sbp" aria-label="Tore nach Spielphase">${p.b.map((v,i)=>`<div><span class="sbv">${v}</span><i style="height:${Math.round(v/mx*56)+2}px"></i><small>${i*10}′</small></div>`).join("")}</div>`:""}
+      ${tr.length?`<ul class="sbt">${tr.map(([a,b])=>`<li><b>${a}</b> ${b}</li>`).join("")}</ul>`:""}
+    </div>`;}).join("")||'<div class="empty">Keine Daten.</div>'}
+    <span class="note">Balken = Tore je 10-Minuten-Abschnitt (${LEN[k]} Minuten Spielzeit). Abwehrleistung einzelner Spielerinnen steht nicht in den Spielberichten, nur Tore, Siebenmeter und Zeiten.</span></section>`;
 
   // Hinweise
   const S=leagueStats(k), T=Object.values(S.teams).filter(t=>t.gp), n=T.length;
   const avgQ=T.reduce((s,t)=>s+(t.s7?t.g7/t.s7:0),0)/n, avgPen=T.reduce((s,t)=>s+(t.rg?(t.y+t.m2+t.d)/t.rg:0),0)/n;
   const rankBy=(fn,low)=>1+T.filter(t=>low?fn(t)<fn(P.t):fn(t)>fn(P.t)).length;
   const tips=[];
-  if(top[0]&&P.tot>=10){const s1=top[0].g/P.tot; if(s1>=0.3) tips.push(`<b>${esc(top[0].name)}</b> wirft ${Math.round(s1*100)} % aller Tore von ${on}. Auf sie besonders achten.`);
-    if(top[1]&&(top[0].g+top[1].g)/P.tot>=0.55) tips.push(`Zwei Spielerinnen (${esc(top[0].name)} und ${esc(top[1].name)}) werfen zusammen über die Hälfte der Tore.`);
+  if(top[0]&&P.tot>=10){const s1=top[0].g/P.tot; if(s1>=0.3) tips.push(`<b>${top[0].nr!=null?"#"+top[0].nr+" ":""}${esc(top[0].name)}</b> wirft ${Math.round(s1*100)} % aller Tore von ${on}. Auf sie besonders achten.`);
+    if(top[1]&&(top[0].g+top[1].g)/P.tot>=0.55) tips.push(`Zwei Spielerinnen (${top[0].nr!=null?"#"+top[0].nr+" ":""}${esc(top[0].name)} und ${top[1].nr!=null?"#"+top[1].nr+" ":""}${esc(top[1].name)}) werfen zusammen über die Hälfte der Tore.`);
     else if(P.players.filter(p=>p.g/P.tot>=0.1).length>=4) tips.push(`Die Tore sind breit verteilt – es gibt nicht die eine Spielerin, die man abmelden kann.`);}
   const rA=rankBy(t=>t.gf/t.gp), rD=rankBy(t=>t.ga/t.gp,true);
   if(rA<=2) tips.push(`Torgefährlich: ${fmt1(P.t.gf/P.t.gp)} Tore pro Spiel (Platz ${rA} der Liga).`);
@@ -937,7 +983,7 @@ function viewLigaAna(k){
     if(M) html+=`<section class="sec"><h2>Wie verteilen sich unsere Tore?</h2><div class="card">${M.players.map(p=>{const sh=M.tot?p.g/M.tot:0;return `<div class="kp"><div class="kn"><b>${esc(pName(p.name,US))}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} · Ø ${fmt1(p.g/p.gp)}</span></div><div class="ks"><span class="bar"><i style="width:${Math.round(sh*100)}%"></i></span><span>${Math.round(sh*100)} %</span></div></div>`;}).join("")}</div></section>`;
   } else {
     html+=`<section class="sec"><h2>Schlüsselspielerinnen je Team</h2><div class="list">${teams.map(P=>{const p=P.players[0];const sh=p&&P.tot?Math.round(p.g/P.tot*100):0;
-      return `<div class="g ${P.t.name===US?"mine":""}"><div class="d">${P.rank}.<small>Platz</small></div><div class="mt"><div class="t">${teamHtml(P.t.name)}</div><div class="h">${p?`Top: <b>${esc(pName(p.name,P.t.name))}</b> ${p.g} Tore (${sh} %)`:"keine Daten"}${P.seven?` · 7m: ${esc(pName(P.seven.name,P.t.name))} ${P.seven.g7}/${P.seven.a7}`:""}</div></div><span></span></div>`;}).join("")}</div>
+      return `<div class="g ${P.t.name===US?"mine":""}"><div class="d">${P.rank}.<small>Platz</small></div><div class="mt"><div class="t">${teamHtml(P.t.name)}</div><div class="h">${p?`Top: <b>${p.nr!=null?"#"+p.nr+" ":""}${esc(pName(p.name,P.t.name))}</b> ${p.g} Tore (${sh} %)`:"keine Daten"}${P.seven?` · 7m: ${esc(pName(P.seven.name,P.t.name))} ${P.seven.g7}/${P.seven.a7}`:""}</div></div><span></span></div>`;}).join("")}</div>
       <span class="note">Prozent = Anteil an allen Toren der Mannschaft. Je höher, desto abhängiger ist das Team von dieser Spielerin.</span></section>`;
     const pick=(fn,low,filt=()=>true)=>{const c=teams.filter(filt);return c.length?c.reduce((b,P)=>(low?fn(P)<fn(b):fn(P)>fn(b))?P:b):null;};
     const facts=[];

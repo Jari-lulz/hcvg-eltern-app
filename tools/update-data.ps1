@@ -170,6 +170,7 @@ function Parse-Report([string]$html) {
     $c = Get-Cells $tr
     if ($c.Count -lt 4) { continue }
     $team = Clean $c[0][1]; $time = Clean $c[1][1]; $what = Clean $c[3][1]
+    $nr = 0; if ($c.Count -ge 5 -and (Clean $c[4][1]) -match '^(\d+)\s') { $nr = [int]$Matches[1] }   # Rueckennummer der Werferin
     if ($time -notmatch '^(\d+):(\d+)$') { continue }
     $sec = [int]$Matches[1] * 60 + [int]$Matches[2]
     $s = 0
@@ -178,7 +179,7 @@ function Parse-Report([string]$html) {
       '^Tor$' { 'g' } '7m mit Tor' { '7g' } '7m ohne Tor' { '7x' } 'Verwarnung' { 'y' }
       '2-?min|Zeitstrafe' { '2' } 'Disqual' { 'd' } 'Auszeit' { 't' } default { $what }
     }
-    $ev += , @($sec, $s, $code)
+    $ev += , @($sec, $s, $code, $nr)
   }
   return [ordered]@{ ht = $ht; sr = $sr; h = (& $side 0); a = (& $side 1); ev = $ev }
 }
@@ -236,7 +237,7 @@ foreach ($key in $Leagues.Keys) {
       }
     }
     if ($mid -and $g[5]) {
-      $cacheFile = Join-Path $CacheDir "$mid.json"
+      $cacheFile = Join-Path $CacheDir "$mid.v2.json"   # v2: Ereignisse mit Rueckennummer
       $rep = $null
       if (Test-Path $cacheFile) {
         $rep = [IO.File]::ReadAllText($cacheFile, [Text.Encoding]::UTF8)

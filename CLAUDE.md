@@ -8,7 +8,8 @@ Eltern-App für die weibliche D- und C-Jugend des HC Vorpommern-Greifswald (Sais
   - `window.HCVG_DATA = { updated, leagues: { D, C }, halls }`
   - je Liga: `table`, `games`, `reports`
   - Spielzeile: `[Datum, Uhrzeit, Hallen-ID, Heim, Gast, Ergebnis, Notiz, Bericht-ID, angesetzter Schiri]`
-  - Bericht: `{ ht, sr[], h, a, ev[] }`. `h`/`a` = `{ p: [[Nr, Name, PersonID, Tore, 7mTore, 7mVersuche, Gelb, 2Min, Disq]], s7, g7, m2, y, d, to }`. `ev` = `[Sekunde, Seite(1 Heim/2 Gast), Code]` mit Code `g`, `7g`, `7x`, `y`, `2`, `d`, `t`.
+  - Bericht (Cache `tools/cache/<id>.v2.json`): `{ ht, sr[], h, a, ev[] }`. `ev` = `[Sekunde, Seite, Code, Rückennummer]` – über die Nummer wird jedes Tor der Werferin zugeordnet (Torphasen, Halbzeiten, Steckbriefe im Gegner-Check).
+- Alt: `h`/`a` = `{ p: [[Nr, Name, PersonID, Tore, 7mTore, 7mVersuche, Gelb, 2Min, Disq]], s7, g7, m2, y, d, to }`. `ev` = `[Sekunde, Seite(1 Heim/2 Gast), Code]` mit Code `g`, `7g`, `7x`, `y`, `2`, `d`, `t`.
 - Von Hand gepflegt in `index.html`: `SHORT` (Kurznamen), `LEN` (Spielzeit je Liga).
 - Trainingszeiten: `tools/training.json` (einzige Stelle, gilt für App und Kalender). `from`/`until` = Zeitraum der wöchentlichen Kalender-Serien. Nach Änderung: Skript laufen lassen oder einfach pushen (der Workflow läuft bei jedem Push).
 - Hallen mit Adresse: `tools/halls.json` (einzige Liste). Das Skript schreibt sie als `hallInfo` nach `data.js`, die App liest sie von dort (`HALLS`). Neue Halle = Eintrag dort ergänzen.
