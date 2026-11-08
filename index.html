@@ -2,6 +2,7 @@
 <html lang="de">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>HCVG Mannschafts-App</title>
 <script>/* Hell/Dunkel: gemerkte Wahl sofort setzen, damit nichts aufblitzt */try{const t=localStorage.getItem("hcvg-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <meta name="robots" content="noindex, nofollow">
@@ -13,6 +14,7 @@
 <style>
 /* Layout: one narrow phone column — sticky team switcher on top, "next game" scoreboard card, then lists. Court-floor navy + court-line yellow. */
 :root{
+  color-scheme:light dark; /* sagt dem Browser: App hat eigenen Dunkelmodus, nicht selbst umfärben */
   --bg:#eef1f6; --surface:#ffffff; --ink:#0f1c33; --muted:#5a6680; --line:#d6dce8;
   --court:#16305e; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
   --us:#e6edfb; --win:#1e8a4c; --loss:#c23b3b; --draw:#8a6d1e;
@@ -44,7 +46,7 @@ header{padding-top:18px;display:flex;align-items:center;gap:12px}
 header .ht{display:flex;flex-direction:column;gap:4px;min-width:0}
 header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
-figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/10;max-width:100%;background:var(--court)}
+figure.hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/8;max-width:100%;background:var(--court)}
 .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
 figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,20,40,0) 35%,rgba(10,20,40,.88) 100%)}
 .hero .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;color:#fff;display:flex;flex-direction:column;gap:4px}
@@ -101,23 +103,25 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .sub a:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 
 /* Scoreboard card */
-.board{background:var(--court);color:var(--court-ink);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.board{background:var(--court);color:var(--court-ink);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
 .board::after{content:"";position:absolute;right:-70px;top:-70px;width:200px;height:200px;border:3px dashed rgba(255,255,255,.18);border-radius:50%;pointer-events:none}
 .board .when{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
-.board .date{font:800 26px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.board .date{font:800 22px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
 .times{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.times>div{background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+.times>div{background:rgba(255,255,255,.12);border-radius:12px;padding:7px 10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
 .times small{flex-basis:100%;font:700 12px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;opacity:.85}
-.times b{font:800 34px/1.05 var(--display);font-variant-numeric:tabular-nums}
+.times b{font:800 28px/1.05 var(--display);font-variant-numeric:tabular-nums}
 .times span{font-size:13px;opacity:.85}
 .times .treff{background:var(--tape);color:var(--tape-ink)}
 .count{font:800 14px/1 var(--display);background:var(--tape);color:var(--tape-ink);padding:6px 9px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
 .match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
-.team{font:800 24px/1.05 var(--display);text-transform:uppercase;text-wrap:balance;min-width:0}
+.team{font:800 20px/1.05 var(--display);text-transform:uppercase;text-wrap:balance;min-width:0}
 .team.away{text-align:right}
 .team.us{color:var(--tape)}
 .vs{font:700 14px/1 var(--display);opacity:.7}
-.hall{font-size:14px;opacity:.92}
+.hall{font-size:13px;opacity:.92;line-height:1.35}
+.brow{flex-wrap:nowrap;gap:6px}
+.brow .btn{flex:1 1 auto;justify-content:center;padding:9px 8px;font-size:13px;white-space:nowrap}
 .hall b{display:block;font-weight:600}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:7px;font:600 14px/1 var(--body);text-decoration:none;border-radius:10px;padding:11px 14px;border:0;cursor:pointer}
@@ -560,7 +564,7 @@ function nextCard(k){
     ${times}
     <div class="match"><div class="team ${home?"us":""}">${esc(sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(sn(g.away))}</div></div>
     <div class="hall"><b>${home?"Heimspiel · ":"Auswärts · "}${esc(hallName(g.loc))}</b>${esc(hallAddr(g.loc))}${g.note?`<br>${esc(g.note)}`:""}</div>
-    <div class="row">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route planen</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live-Ticker</a>${FEATURE_GEGNER&&!/Platzhalter/.test(home?g.away:g.home)?`<button class="btn ghost" data-gegner="${k}">🔎 Gegner-Check</button>`:""}</div>
+    <div class="row brow">${g.loc?`<a class="btn primary" href="${mapsUrl(g.loc)}" target="_blank" rel="noopener">${ICON_PIN} Route</a>`:""}<a class="btn ghost" href="${liveUrl(L.group)}" target="_blank" rel="noopener">${ICON_LIVE} Live</a>${FEATURE_GEGNER&&!/Platzhalter/.test(home?g.away:g.home)?`<button class="btn ghost" data-gegner="${k}">🔎 Gegner-Check</button>`:""}</div>
   </section>`;
 }
 
