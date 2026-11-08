@@ -89,6 +89,22 @@ figure.hero::after{content:"";position:absolute;inset:0;background:linear-gradie
   #view.anim .col .bar{animation:growy .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:.25s;transform-origin:bottom center}
   @keyframes growy{from{transform:scaleY(0)}}
   details[open] .gx{animation:rise .35s ease both}
+  /* Kader und Tabelle: Zeilen laufen nacheinander ein */
+  #view.anim .kp2,#view.anim table.lt tbody tr{animation:rise .45s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(.15s + var(--r,0)*45ms)}
+  /* Spieleinschätzung: Punkte gleiten einzeln herein */
+  details[open] .gn li{animation:slidein .4s cubic-bezier(.2,.75,.25,1) both}
+  details[open] .gn li:nth-child(2){animation-delay:.12s} details[open] .gn li:nth-child(3){animation-delay:.24s}
+  details[open] .gn .minus li{animation-delay:.36s} details[open] .gn .minus li:nth-child(2){animation-delay:.48s} details[open] .gn .minus li:nth-child(3){animation-delay:.6s}
+  @keyframes slidein{from{opacity:0;transform:translateX(-14px)}}
+  /* Capri-Sonne: schlürf-hüpfen statt wackeln */
+  .cakeline.capri .em{animation:slurp 2.4s ease-in-out infinite;transform-origin:50% 100%}
+  @keyframes slurp{0%,55%,100%{transform:scale(1)}65%{transform:scale(1.12,.86)}75%{transform:scale(.92,1.12) translateY(-4px)}85%{transform:scale(1.04,.97)}}
+  /* App teilen: kleiner Ring alle paar Sekunden */
+  .shareapp .ic::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--ours);animation:ping 3.2s ease-out infinite}
+  @keyframes ping{0%,40%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+  /* Kuchen bzw. Capri-Sonne fällig: Glanz läuft über das Feld */
+  .cakeline.due::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-100%);animation:shine 3.5s ease-in-out infinite;pointer-events:none}
+  @keyframes shine{0%,50%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
   /* Spielverlauf deckt sich gleichmäßig von Anpfiff bis Schluss auf */
   details[open] .mom .plot svg{animation:reveal 3s linear .2s both}
   @keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
@@ -246,7 +262,8 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .cakeline.due small,.cakeline.due span{color:var(--tape-ink);opacity:.8}
 .cakeline.due b i{background:rgba(0,0,0,.12);color:var(--tape-ink)}
 .shareapp{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;cursor:pointer}
-.shareapp .ic{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ours);color:var(--on-ours)}
+.cakeline.due{position:relative;overflow:hidden}
+.shareapp .ic{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ours);color:var(--on-ours)}
 .shareapp .ic svg{width:18px;height:18px}
 .shareapp span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
 .shareapp b{font:800 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
@@ -823,7 +840,7 @@ function viewKader(){
   for(const k of ["D","C"]){
     const ps=leagueStats(k).players.filter(p=>p.team===US).sort((a,b)=>(isKeeper(k,b)-isKeeper(k,a))||(a.gp-b.gp)||(a.nr??99)-(b.nr??99)||a.name.localeCompare(b.name));
     html+=`<section class="sec"><div class="sechead"><h2>${k}-Jugend</h2><span class="note">${ps.length} Spielerinnen</span></div>
-      <div class="kader">${ps.map(p=>{const pt=powertime(k,p);return `<div class="kp2"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${isKeeper(k,p)?`<span class="pt">🧤 Torhüterin · Hält das Team im Spiel</span>`:pt?`<span class="pt">Torgefährlich in Minute ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
+      <div class="kader">${ps.map((p,i)=>{const pt=powertime(k,p);return `<div class="kp2" style="--r:${Math.min(i,14)}"><span class="kn2">${p.nr??"–"}</span><div><b>${esc(pName(p.name,US))}</b><span class="note">${p.gp} ${p.gp===1?"Spiel":"Spiele"}${p.g?` · ${p.g} ${p.g===1?"Tor":"Tore"}`:""}</span>${isKeeper(k,p)?`<span class="pt">🧤 Torhüterin · Hält das Team im Spiel</span>`:pt?`<span class="pt">Torgefährlich in Minute ${pt}</span>`:""}</div></div>`;}).join("")||'<div class="empty">Noch keine Spielberichte.</div>'}</div></section>`;
   }
   html+=`<p class="note" style="margin:0">Alle Spielerinnen, die in dieser Saison in mindestens einem Spielbericht stehen. Zuerst die Torhüterinnen, danach nach Anzahl der Spiele. Rückennummer = die am häufigsten getragene. „Torgefährlich in Minute …“ = der 10-Minuten-Abschnitt, in dem eine Spielerin die meisten Tore wirft (D-Jugend 4 Abschnitte, C-Jugend 5).</p>`;
   return html;
@@ -869,7 +886,7 @@ function viewResults(k){
 function viewTable(k){
   const L=LEAGUES[k];
   const t=`<div class="tbl-wrap"><table class="lt"><thead><tr><th>#</th><th>Mannschaft</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>+/-</th><th>Pkt</th></tr></thead><tbody>${
-    L.table.map((r,i)=>`<tr class="${r[0]===US?"mine":""}"><td>${i+1}</td><td>${esc(sn(r[0]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${esc(r[5])}</td><td>${r[6]>0?"+":""}${r[6]}</td><td class="pts">${esc(r[7])}</td></tr>`).join("")}</tbody></table></div>`;
+    L.table.map((r,i)=>`<tr class="${r[0]===US?"mine":""}" style="--r:${i}"><td>${i+1}</td><td>${esc(sn(r[0]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${esc(r[5])}</td><td>${r[6]>0?"+":""}${r[6]}</td><td class="pts">${esc(r[7])}</td></tr>`).join("")}</tbody></table></div>`;
   return `<section class="sec"><div class="sechead"><h2>Tabelle</h2><a class="note" href="${nuUrl(L.group)}" target="_blank" rel="noopener" style="color:var(--muted)">auf nuLiga</a></div>${t}</section>`;
 }
 
