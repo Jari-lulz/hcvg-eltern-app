@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HCVG Mädels-Spieltag</title>
+<script>/* Hell/Dunkel: gemerkte Wahl sofort setzen, damit nichts aufblitzt */try{const t=localStorage.getItem("hcvg-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="img/logo.webp" type="image/webp">
 <link rel="apple-touch-icon" href="img/logo.webp">
@@ -16,17 +17,18 @@
   --court:#16305e; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
   --us:#e6edfb; --win:#1e8a4c; --loss:#c23b3b; --draw:#8a6d1e;
   --accent:var(--court); --bar-them:#b9c3d6;
+  --them:#c0392b; --on-them:#ffffff; --ours:#1e8a4c; --on-ours:#ffffff; --badge:var(--court); --on-badge:#ffffff;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0b1220; --surface:#131d31; --ink:#e8edf7; --muted:#9aa6bf; --line:#26324a;
   --court:#1c3a70; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
-  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; color-scheme:dark}}
+  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; --them:#ff8f8f; --on-them:#3b0909; --ours:#6fdc9c; --on-ours:#04240f; --badge:#f2c230; --on-badge:#1b1400; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b1220; --surface:#131d31; --ink:#e8edf7; --muted:#9aa6bf; --line:#26324a;
   --court:#1c3a70; --court-ink:#ffffff; --tape:#f2c230; --tape-ink:#1b1400;
-  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; color-scheme:dark}
+  --us:#1a2a4a; --win:#4cc27e; --loss:#ff7a7a; --draw:#e0c068; --accent:var(--tape); --bar-them:#3a4866; --them:#ff8f8f; --on-them:#3b0909; --ours:#6fdc9c; --on-ours:#04240f; --badge:#f2c230; --on-badge:#1b1400; color-scheme:dark}
 *{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
@@ -36,6 +38,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
 header{padding-top:18px;display:flex;align-items:center;gap:12px}
+.theme{margin-left:auto;flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.theme svg{width:22px;height:22px}
+.theme:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 header .ht{display:flex;flex-direction:column;gap:4px;min-width:0}
 header .logo{width:56px;height:56px;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
 /* Team-Banner auf der Startseite */
@@ -143,7 +148,7 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .ks{display:grid;grid-template-columns:1fr 40px;gap:8px;align-items:center;font:700 14px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
 .ks .bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
 .ks .bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
-.ai:not(.pos):not(.neg) .ic{background:var(--court)}
+.ai:not(.pos):not(.neg) .ic{background:var(--badge);color:var(--on-badge)}
 .kduel{display:grid;grid-template-columns:18px 1fr 1fr;gap:10px;align-items:start}
 .kduel.head,.kduel.seven{grid-template-columns:1fr 1fr;padding-left:28px}
 .kduel.head span{font:700 13px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
@@ -152,21 +157,22 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .kc{display:flex;flex-direction:column;gap:3px;min-width:0}
 .kc b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kc .ks{grid-template-columns:1fr 34px}
-.kc.us .ks .bar i{background:var(--win)}
-.kc .ks .bar i{background:var(--loss)}
-.nr{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;margin-right:6px;border-radius:50%;background:var(--court);color:var(--court-ink);font:800 12px/1 var(--display);vertical-align:1px}
-.kc.us .nr,tr.mine .nr{background:var(--win)}
-.sb{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--loss);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
-.sbh{display:flex;gap:12px;align-items:center}
-.sbh div{display:flex;flex-direction:column;min-width:0}
-.sbh b{font:800 20px/1.1 var(--display);text-transform:uppercase}
-.sbn{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--loss);color:#fff;font:800 24px/1 var(--display)}
-.sbp{display:flex;gap:6px;align-items:flex-end}
-.sbp div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
-.sbp i{display:block;flex:none;width:70%;max-width:30px;background:var(--loss);opacity:.8;border-radius:4px 4px 0 0;min-height:2px}
-.sbp .sbv{font:700 12px/1 var(--display);color:var(--muted)}
-.sbp small{font-size:11px;color:var(--muted)}
-.sbt{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.kc.us .ks .bar i{background:var(--ours)}
+.kc .ks .bar i{background:var(--them)}
+.nr{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;margin-right:6px;border-radius:50%;background:var(--badge);color:var(--on-badge);font:800 12px/1 var(--display);vertical-align:1px}
+.kc.us .nr,tr.mine .nr{background:var(--ours);color:var(--on-ours)}
+.sb{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--them);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.sbh{display:flex;gap:10px;align-items:center}
+.sbi{display:flex;flex-direction:column;min-width:0;flex:1}
+.sbi b{font:800 17px/1.1 var(--display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sbi .note{font-size:12px}
+.sbn{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--them);color:var(--on-them);font:800 19px/1 var(--display)}
+.sbp{flex:none;width:118px;display:flex;gap:3px;align-items:flex-end;padding-bottom:2px;border-bottom:1px solid var(--line)}
+.sbp div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px}
+.sbp i{display:block;flex:none;width:100%;max-width:20px;background:var(--them);border-radius:3px 3px 0 0;min-height:2px}
+.sbp .sbv{font:700 11px/1 var(--display);color:var(--ink)}
+.sbt{display:flex;flex-wrap:wrap;gap:6px}
+.sbt span{font-size:12px;line-height:1.2;padding:4px 8px;border-radius:999px;background:var(--bg);color:var(--ink)}
 .sbt b{font-weight:700}
 
 /* Kalender-Abo */
@@ -300,13 +306,13 @@ tr.mine td:first-child{color:var(--ink)}
 .ana-sum .sum b{color:var(--tape)}
 .ais{display:flex;flex-direction:column;gap:8px}
 .ai{display:grid;grid-template-columns:30px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;align-items:start}
-.ai .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 16px/1 var(--display);color:#fff}
-.ai.pos .ic{background:var(--win)} .ai.neg .ic{background:var(--loss)}
+.ai .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 16px/1 var(--display);color:var(--on-badge)}
+.ai.pos .ic{background:var(--ours);color:var(--on-ours)} .ai.neg .ic{background:var(--them);color:var(--on-them)}
 .ai b{font-weight:700}
 .ai p{margin:2px 0 0;font-size:14px;color:var(--muted)}
 .focus{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:f}
 .focus li{counter-increment:f;position:relative;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--tape);border-radius:14px;padding:12px 14px 12px 56px;display:flex;flex-direction:column;gap:3px}
-.focus li::before{content:counter(f);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:8px;background:var(--court);color:var(--court-ink);display:grid;place-items:center;font:800 18px/1 var(--display)}
+.focus li::before{content:counter(f);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:8px;background:var(--badge);color:var(--on-badge);display:grid;place-items:center;font:800 18px/1 var(--display)}
 .focus b{font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
 .focus span{font-size:14px}
 .focus small{font-size:12px;color:var(--muted)}
@@ -319,6 +325,7 @@ tr.mine td:first-child{color:var(--ink)}
       <h1>HC Vorpommern-<span>Greifswald</span></h1>
       <div class="eyebrow">Weibliche Jugend C &amp; D</div>
     </div>
+    <button class="theme" id="theme" type="button" aria-label="Hell- oder Dunkelmodus"></button>
   </header>
 
   <div class="switch">
@@ -880,15 +887,16 @@ const nrTag=p=>p&&p.nr!=null?`<span class="nr">${p.nr}</span>`:"";
 // Steckbrief-Merkmale einer Spielerin aus Torzeiten, 7m und Anteil
 function playerTraits(k,p,tot){
   const tr=[], tracked=p.b?p.b.reduce((s,v)=>s+v,0):0;
-  if(tot&&p.g/tot>=0.3) tr.push(["Torjägerin",`${Math.round(p.g/tot*100)} % der Tore ihres Teams`]);
-  if(p.a7>=3) tr.push(["7m-Schützin",`${p.g7} von ${p.a7} verwandelt`]);
+  // kurze Schilder: [Merkmal, Wert]
+  if(tot&&p.g/tot>=0.3) tr.push(["Torjägerin",`${Math.round(p.g/tot*100)} % der Tore`]);
+  if(p.a7>=3) tr.push(["7m",`${p.g7}/${p.a7}`]);
   if(tracked>=5){
     const bi=p.b.reduce((m,v,i)=>v>p.b[m]?i:m,0);
-    tr.push(["Gefährlichste Phase",`${segLabel(k,bi)} (${p.b[bi]} Tore)`]);
-    if(p.h2>=p.h1*1.6&&p.h2-p.h1>=3) tr.push(["Stark nach der Pause",`${p.h1} Tore in der 1., ${p.h2} in der 2. Halbzeit`]);
-    else if(p.h1>=p.h2*1.6&&p.h1-p.h2>=3) tr.push(["Stark vor der Pause",`${p.h1} Tore in der 1., ${p.h2} in der 2. Halbzeit`]);
-    if(p.first/tracked>=0.3) tr.push(["Blitzstarterin",`${p.first} Tore in den ersten 10 Minuten`]);
-    if(p.late/tracked>=0.3) tr.push(["Schlussphase",`${p.late} Tore in den letzten 10 Minuten`]);
+    tr.push(["Stärkste Phase",`${bi*10}.–${Math.min((bi+1)*10,LEN[k])}. Min.`]);
+    if(p.h2>=p.h1*1.6&&p.h2-p.h1>=3) tr.push(["Stark nach der Pause",`${p.h1}:${p.h2}`]);
+    else if(p.h1>=p.h2*1.6&&p.h1-p.h2>=3) tr.push(["Stark vor der Pause",`${p.h1}:${p.h2}`]);
+    if(p.first/tracked>=0.3) tr.push(["Blitzstart",`${p.first} früh`]);
+    if(p.late/tracked>=0.3) tr.push(["Schlussphase",`${p.late} spät`]);
   }
   return tr;
 }
@@ -927,11 +935,11 @@ function viewOpponent(k){
   const nb=leagueStats(k).nb;
   html+=`<section class="sec"><h2>Steckbriefe: auf diese Nummern achten</h2>${top.slice(0,3).map(p=>{
     const tracked=p.b.reduce((s,v)=>s+v,0), mx=Math.max(1,...p.b), tr=playerTraits(k,p,P.tot);
-    return `<div class="sb"><div class="sbh"><span class="sbn">${p.nr??"?"}</span><div><b>${esc(p.name)}</b><span class="note">${on} · ${p.g} Tore in ${p.gp} ${p.gp===1?"Spiel":"Spielen"} · Ø ${fmt1(p.g/p.gp)}</span></div></div>
-      ${tracked?`<div class="sbp" aria-label="Tore nach Spielphase">${p.b.map((v,i)=>`<div><span class="sbv">${v}</span><i style="height:${Math.round(v/mx*56)+2}px"></i><small>${i*10}′</small></div>`).join("")}</div>`:""}
-      ${tr.length?`<ul class="sbt">${tr.map(([a,b])=>`<li><b>${a}</b> ${b}</li>`).join("")}</ul>`:""}
+    return `<div class="sb"><div class="sbh"><span class="sbn">${p.nr??"?"}</span><div class="sbi"><b>${esc(p.name)}</b><span class="note">${p.g} Tore · ${p.gp} Sp. · Ø ${fmt1(p.g/p.gp)}</span></div>
+      ${tracked?`<div class="sbp" aria-label="Tore nach Spielphase">${p.b.map((v,i)=>`<div title="${segLabel(k,i)}"><span class="sbv">${v}</span><i style="height:${Math.round(v/mx*26)+2}px"></i></div>`).join("")}</div>`:""}</div>
+      ${tr.length?`<div class="sbt">${tr.map(([a,b])=>`<span><b>${a}</b> ${b}</span>`).join("")}</div>`:""}
     </div>`;}).join("")||'<div class="empty">Keine Daten.</div>'}
-    <span class="note">Balken = Tore je 10-Minuten-Abschnitt (${LEN[k]} Minuten Spielzeit). Abwehrleistung einzelner Spielerinnen steht nicht in den Spielberichten, nur Tore, Siebenmeter und Zeiten.</span></section>`;
+    <span class="note">Kleine Balken = Tore je 10 Minuten, von Anpfiff (links) bis Schluss (rechts). Abwehrleistung einzelner Spielerinnen steht nicht in den Spielberichten.</span></section>`;
 
   // Hinweise
   const S=leagueStats(k), T=Object.values(S.teams).filter(t=>t.gp), n=T.length;
@@ -951,7 +959,7 @@ function viewOpponent(k){
     else if(P.h1-P.h2>=1.5) tips.push(`Lässt nach der Pause nach: In der 2. Halbzeit im Schnitt ${fmt1(P.h1-P.h2)} Tore schlechter – Druck hochhalten.`); }
   if(P.q7!=null&&P.t.s7>=4){ if(P.q7<=avgQ-0.12) tips.push(`Unsicher vom Siebenmeter: nur ${P.t.g7} von ${P.t.s7} verwandelt.`); else if(P.q7>=avgQ+0.12) tips.push(`Sicher vom Siebenmeter: ${P.t.g7} von ${P.t.s7} verwandelt – Fouls im Kreis vermeiden.`); }
   if(P.t.rg&&P.pen>=avgPen*1.3) tips.push(`Viele Strafen: ${fmt1(P.pen)} pro Spiel (Liga-Schnitt ${fmt1(avgPen)}). Überzahl nutzen!`);
-  html+=`<section class="sec"><h2>Worauf achten?</h2><div class="ais">${tips.map(t=>`<div class="ai pos"><span class="ic" aria-hidden="true" style="background:var(--court)">i</span><div><p style="margin:0;color:var(--ink)">${t}</p></div></div>`).join("")||'<div class="empty">Die Zahlen zeigen nichts Auffälliges.</div>'}</div></section>`;
+  html+=`<section class="sec"><h2>Worauf achten?</h2><div class="ais">${tips.map(t=>`<div class="ai"><span class="ic" aria-hidden="true">i</span><div><p style="margin:0;color:var(--ink)">${t}</p></div></div>`).join("")||'<div class="empty">Die Zahlen zeigen nichts Auffälliges.</div>'}</div></section>`;
 
   // Direkter Vergleich und gemeinsame Gegner
   const h2h=played(ALL.filter(x=>x.lg===k&&((x.home===US&&x.away===opp)||(x.home===opp&&x.away===US))));
@@ -995,7 +1003,7 @@ function viewLigaAna(k){
     const fair=pick(P=>P.pen,true,P=>P.t.rg>=2); if(fair) facts.push(["Fairste Mannschaft",fair,`${fmt1(fair.pen)} Strafen pro Spiel`]);
     const rough=pick(P=>P.pen,false,P=>P.t.rg>=2); if(rough&&rough!==fair) facts.push(["Die meisten Strafen",rough,`${fmt1(rough.pen)} pro Spiel`]);
     const sv=pick(P=>P.q7??0,false,P=>P.t.s7>=5); if(sv) facts.push(["Sicherste Siebenmeter",sv,`${sv.t.g7} von ${sv.t.s7} verwandelt`]);
-    html+=`<section class="sec"><h2>Auffälligkeiten in der Liga</h2><div class="ais">${facts.map(([t,P,x])=>`<div class="ai ${P.t.name===US?"pos":""}"><span class="ic" aria-hidden="true" style="background:${P.t.name===US?"var(--win)":"var(--court)"}">${P.rank}</span><div><b>${esc(t)}: ${esc(sn(P.t.name))}</b><p>${x}</p></div></div>`).join("")}</div><span class="note">Zahl im Kreis = Tabellenplatz.</span></section>`;
+    html+=`<section class="sec"><h2>Auffälligkeiten in der Liga</h2><div class="ais">${facts.map(([t,P,x])=>`<div class="ai ${P.t.name===US?"pos":""}"><span class="ic" aria-hidden="true">${P.rank}</span><div><b>${esc(t)}: ${esc(sn(P.t.name))}</b><p>${x}</p></div></div>`).join("")}</div><span class="note">Zahl im Kreis = Tabellenplatz.</span></section>`;
   }
   html+=`<p class="note" style="margin:0">Alle Werte aus den genehmigten Spielberichten der Liga. Namen sind gekürzt.</p>`;
   return html;
@@ -1070,5 +1078,15 @@ view.addEventListener("click",e=>{
   }
   if(b.dataset.cmp){st.cmp[k]=b.dataset.cmp;render();return;}
 });
+
+/* Hell/Dunkel-Schalter: ohne eigene Wahl folgt die App dem Handy */
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+const isDark=()=>document.documentElement.dataset.theme?document.documentElement.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+const themeBtn=document.getElementById("theme");
+function paintTheme(){ const d=isDark(); themeBtn.innerHTML=d?SUN:MOON; themeBtn.setAttribute("aria-label",d?"Hellen Modus einschalten":"Dunklen Modus einschalten"); }
+themeBtn.addEventListener("click",()=>{ const t=isDark()?"light":"dark"; document.documentElement.dataset.theme=t; try{localStorage.setItem("hcvg-theme",t);}catch(e){} paintTheme(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",paintTheme);
+paintTheme();
 render();
 </script>
