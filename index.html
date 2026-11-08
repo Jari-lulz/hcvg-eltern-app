@@ -742,11 +742,11 @@ function cakeTile(){
   const due=cakeDue();
   if(!due.length){
     const wk=Math.floor(Date.now()/(7*864e5));
-    return `<section class="cakeline" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>Noch frei!</b><span>${esc(CAKE_EMPTY[wk%CAKE_EMPTY.length])}</span></div></section>`;
+    return `<section class="cakeline" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · 30. Tor</small><b>Noch frei!</b><span>${esc(CAKE_EMPTY[wk%CAKE_EMPTY.length])}</span></div></section>`;
   }
   const names=due.map(c=>`${esc(pName(c.name,US))} <i>${c.k}</i>`).join(" &amp; ");
   const c0=due[0];
-  return `<section class="cakeline due" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>${names} ${due.length>1?"bringen":"bringt"} Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c0))}</span></div></section>`;
+  return `<section class="cakeline due" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · 30. Tor</small><b>${names} ${due.length>1?"bringen":"bringt"} Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c0))}</span></div></section>`;
 }
 
 /* Capri-Sonne-Regel (Wunsch der Mädels): Wer in einem Spiel das 40. Tor wirft, bringt einen 10er-Träger Capri-Sonne mit.
@@ -1240,13 +1240,18 @@ function save(){try{localStorage.setItem("hcvg-tab",current);localStorage.setIte
 // Einblend-Animation nur beim Wechsel von Seite/Unterreiter, nicht bei Filter- oder Sortierknöpfen
 let animNext=true;
 // Startseite: Foto + beide Spielkarten füllen genau den ersten Bildschirm, Kuchen-Alarm & Co. beginnen darunter
+// Nur am Handy (schmaler Bildschirm). Höhe wird einmal gemessen und nicht neu berechnet, wenn beim Scrollen
+// die Adressleiste verschwindet – sonst rutscht der Kuchen-Alarm nach unten.
+let foldH=0, foldW=0;
 function sizeFold(){
   const f=view.querySelector(".fold"); if(!f) return;
   f.style.minHeight="";
-  const need=window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)+22;   // +22: Kuchen-Alarm sicher unterhalb (auch hinter Browserleisten)
+  if(window.innerWidth>600) return;   // PC / Tablet: kein Strecken, keine Lücke
+  if(!foldH||window.innerWidth!==foldW){ foldH=window.innerHeight; foldW=window.innerWidth; }
+  const need=foldH-(f.getBoundingClientRect().top+window.scrollY)+22;   // +22: Kuchen-Alarm sicher unterhalb (auch hinter Browserleisten)
   if(f.offsetHeight<need) f.style.minHeight=need+"px";
 }
-window.addEventListener("resize",()=>{ if(current==="us") sizeFold(); });
+window.addEventListener("resize",()=>{ if(current==="us"&&window.innerWidth!==foldW) sizeFold(); });
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
   view.innerHTML = current==="us"?viewUs():current==="kader"?viewKader():current==="ana"?viewAnalysis():viewLeague(current);
