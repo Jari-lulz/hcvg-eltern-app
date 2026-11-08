@@ -698,8 +698,15 @@ function analyse(k){
   else if(rD>=low3) minus.push({w:3.2,t:"Viele Gegentore",x:`${fmt1(ga(me))} Gegentore pro Spiel (Platz ${rD} von ${n}).`+cmp(ga,true,fmt1),
     f:["Abwehrarbeit","1-gegen-1, gemeinsames Verschieben, Rückzug nach Ballverlust."]});
 
-  // Siebenmeter
+  // Torhüterinnen: Paraden stehen nicht im Spielbericht. Wenige Gegentore sind aber auch ihr Verdienst,
+  // und bei gegnerischen Siebenmetern sieht man ihren Anteil direkt.
+  let o7=0,og7=0;
+  for(const g of ALL.filter(x=>x.lg===k&&x.mine&&x.res)){const s=report(g)?.[g.home===US?"a":"h"]; if(s){o7+=s.s7; og7+=s.g7;}}
   const q=t=>t.s7?t.g7/t.s7:0, qa=avg(q);
+  const keeper=[];
+  if(rD<=top3) keeper.push(`Nur ${fmt1(ga(me))} Gegentore pro Spiel sind nicht nur Abwehrarbeit, sondern auch ein starker Rückhalt im Tor.`);
+  if(o7>=3&&og7/o7<=qa-0.1) keeper.push(`Gegnerinnen haben nur ${og7} von ${o7} Siebenmetern gegen uns verwandelt (${pct(og7,o7)}, Liga-Schnitt ${pc(qa)}).`);
+  if(keeper.length) plus.push({w:rD<=top3?4.19-rD/n:2.2,t:"Starke Torhüterinnen",x:keeper.join(" ")+" Gehaltene Würfe werden im Spielbericht leider nicht gezählt, deshalb tauchen Paraden sonst nirgends auf."});
   if(me.s7>=5){
     if(q(me)>=qa+0.07) plus.push({w:2,t:"Sicher vom Siebenmeter",x:`${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}).`+cmp(q,false,pc)});
     else if(q(me)<=qa-0.07||q(me)<0.55) minus.push({w:2.5+(qa-q(me))*5,t:"Siebenmeter-Quote",x:`Nur ${me.g7} von ${me.s7} verwandelt (${pct(me.g7,me.s7)}).`+cmp(q,false,pc),
