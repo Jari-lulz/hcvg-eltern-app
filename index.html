@@ -245,6 +245,9 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .cakeline.due{background:var(--tape);border-style:solid;color:var(--tape-ink)}
 .cakeline.due small,.cakeline.due span{color:var(--tape-ink);opacity:.8}
 .cakeline.due b i{background:rgba(0,0,0,.12);color:var(--tape-ink)}
+.cakeline.capri{border-color:#f28c28}
+.cakeline.capri.due{background:#f28c28;color:#1d1200}
+.cakeline.capri.due small,.cakeline.capri.due span{color:#1d1200}
 
 /* lists */
 .list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -258,13 +261,13 @@ details[open]>summary .chev{transform:rotate(180deg)}
 .gx{padding:4px 14px 16px;display:flex;flex-direction:column;gap:12px;font-size:14px}
 .gx .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted)}
 .gx .meta b{color:var(--ink);font-weight:600}
-.gn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.gn>div{border-radius:10px;padding:8px 10px;border:1px solid var(--line);background:var(--surface)}
+.gn{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 -14px}
+.gn>div{border-radius:0;padding:7px 14px;border:0;border-block:1px solid var(--line);background:var(--surface)}
 .gn .plus{border-left:4px solid var(--win)}
 .gn .minus{border-left:4px solid var(--loss)}
 .gn h4{font:700 13px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
 .gn ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35}
-.gn .note{grid-column:1/-1;margin:0;font-size:11px}
+.gn .note{grid-column:1/-1;margin:0;font-size:11px;padding:0 14px}
 @media (max-width:520px){.gn{grid-template-columns:1fr}}
 .sc{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .sc h4{font:700 14px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
@@ -704,17 +707,18 @@ function inviteText(k){
 /* Kuchen-Regel: Wer in einem Spiel das 30. Tor für uns wirft, bringt zum nächsten Training Kuchen mit.
    Die Werferin kommt aus data.js (leagues[k].cake = {Bericht-ID: Name}, aus der nuScore-Ereignisliste). */
 const CAKE_FRESH_DAYS=10;   // so lange steht der Hinweis nach dem Spiel auf der Startseite
-function cakeGames(k){
-  const map=LEAGUES[k].cake||{};
+// field: "cake" (30. Tor) oder "capri" (40. Tor, 10er-Träger Capri-Sonne)
+function cakeGames(k,field="cake"){
+  const map=LEAGUES[k][field]||{};
   return ALL.filter(g=>g.lg===k&&g.mine&&g.res&&map[g.mid]).sort((a,b)=>a.dt-b.dt)
-    .map(g=>({name:map[g.mid],k,dt:g.dt,opp:sn(g.home===US?g.away:g.home),home:g.home===US,res:g.res}));
+    .map(g=>({name:map[g.mid],k,field,dt:g.dt,opp:sn(g.home===US?g.away:g.home),home:g.home===US,res:g.res}));
 }
 // Fällig ist nur das letzte Spiel je Jugend – also höchstens zwei Kuchen (D und C).
-function cakeDue(){
+function cakeDue(field="cake"){
   const out=[], nowT=Date.now();
   for(const k of ["C","D"]){
     const last=played(ALL.filter(g=>g.lg===k&&g.mine))[0];
-    const name=last&&(LEAGUES[k].cake||{})[last.mid];
+    const name=last&&(LEAGUES[k][field]||{})[last.mid];
     if(name&&nowT-last.dt.getTime()<=CAKE_FRESH_DAYS*864e5) out.push({name,k,dt:last.dt,opp:sn(last.home===US?last.away:last.home),home:last.home===US});
   }
   return out;
@@ -743,6 +747,31 @@ function cakeTile(){
   const names=due.map(c=>`${esc(pName(c.name,US))} <i>${c.k}</i>`).join(" &amp; ");
   const c0=due[0];
   return `<section class="cakeline due" aria-label="Kuchen-Alarm"><span class="em" aria-hidden="true">🎂</span><div><small>Kuchen-Alarm · nächster Kuchen</small><b>${names} ${due.length>1?"bringen":"bringt"} Kuchen mit!</b><span>Glückwunsch zum 30. Tor! ${esc(cakeLine(c0))}</span></div></section>`;
+}
+
+/* Capri-Sonne-Regel (Wunsch der Mädels): Wer in einem Spiel das 40. Tor wirft, bringt einen 10er-Träger Capri-Sonne mit.
+   Werferin aus data.js: leagues[k].capri = {Bericht-ID: Name}. */
+const CAPRI_LINES=[
+  "Der Rest der Mannschaft hat schon Durst – Strohhalme bereithalten!",
+  "Handball-Gesetz §40: Wer das 40. Tor wirft, sorgt für Nachschub. Einspruch zwecklos!",
+  "Erst Torjägerin, jetzt Getränkewartin – das nennt man Allrounderin.",
+  "Pieks, schlürf, Sieg: Die ganze Mannschaft sagt schon mal Danke!"
+];
+const CAPRI_EMPTY=[
+  "Wer das 40. Tor wirft, bringt einen 10er-Träger Capri-Sonne mit.",
+  "Die Strohhalme liegen bereit. Das 40. Tor leider noch nicht.",
+  "Nach 30 Toren gibt's Kuchen – nach 40 gibt's was zu trinken!",
+  "Gesucht: die Torschützin Nr. 40. Belohnung: durstige Teamkolleginnen."
+];
+function capriTile(){
+  const due=cakeDue("capri");
+  if(!due.length){
+    const wk=Math.floor(Date.now()/(7*864e5));
+    return `<section class="cakeline capri" aria-label="Capri-Sonne-Alarm"><span class="em" aria-hidden="true">🧃</span><div><small>Capri-Sonne-Alarm · 40. Tor</small><b>Noch frei!</b><span>${esc(CAPRI_EMPTY[wk%CAPRI_EMPTY.length])}</span></div></section>`;
+  }
+  const names=due.map(c=>`${esc(pName(c.name,US))} <i>${c.k}</i>`).join(" &amp; ");
+  const c0=due[0], line=CAPRI_LINES[[...c0.name+c0.k].reduce((s,ch)=>s+ch.charCodeAt(0),0)%CAPRI_LINES.length];
+  return `<section class="cakeline capri due" aria-label="Capri-Sonne-Alarm"><span class="em" aria-hidden="true">🧃</span><div><small>Capri-Sonne-Alarm · 40. Tor</small><b>${names} ${due.length>1?"bringen":"bringt"} Capri-Sonne mit!</b><span>Glückwunsch zum 40. Tor! Ein 10er-Träger, bitte. ${esc(line)}</span></div></section>`;
 }
 
 // Kalender zum Abonnieren – die Dateien erzeugt tools/update-data.ps1
@@ -799,7 +828,7 @@ function viewUs(){
   const hero=`<figure class="hero" style="margin:0" data-kader="1" role="button" tabindex="0" aria-label="Mannschaft anzeigen"><img src="img/team-kreis.jpg" alt="Die Mädels im Mannschaftskreis vor dem Spiel" width="900" height="1032">
     <figcaption class="cap"><b><i style="--w:0">Power.</i> <i style="--w:1">Zusammenhalt.</i> <em style="--w:2">Teamwork.</em></b><span>Wir gemeinsam für den Sieg · <u>Mannschaft ansehen ›</u></span></figcaption></figure>`;
   // .fold = erster Bildschirm (Foto + beide Spiele); wird per sizeFold() auf Bildschirmhöhe gestreckt
-  return `<div class="fold">${hero}${nextCard("C")}${nextCard("D")}</div>` + cakeTile() + trainingTile() + calTile();
+  return `<div class="fold">${hero}${nextCard("C")}${nextCard("D")}</div>` + cakeTile() + capriTile() + trainingTile() + calTile();
 }
 
 const st = { filterMine:{D:false,C:false}, sub:{D:"tab",C:"tab"}, sort:{D:"g",C:"g"}, topAll:{D:false,C:false}, topUs:{D:false,C:false}, ana:"D", anaMode:"team", ligaUs:false, cal:"CD", cmp:{D:"gf",C:"gf"} };
@@ -917,8 +946,8 @@ function viewStats(k){
     }).join("")||'<div class="empty">Noch keine Angaben.</div>'}</div></section>`;
 
   // Kuchen-Chronik
-  const cg=cakeGames(k).reverse();
-  html+=`<section class="sec"><h2>Kuchen-Chronik 🎂</h2><div class="list">${cg.map(c=>`<div class="g"><div class="d">${c.dt.getDate()}. ${MON[c.dt.getMonth()]}<small>${esc(c.res)}</small></div><div class="mt"><div class="t">${esc(pName(c.name,US))}</div><div class="h">30. Tor ${c.home?"gegen":"bei"} ${esc(c.opp)}</div></div><span></span></div>`).join("")||'<div class="empty">Noch kein Spiel mit 30 Toren – der Ofen bleibt kalt.</div>'}</div></section>`;
+  const cg=[...cakeGames(k),...cakeGames(k,"capri")].sort((a,b)=>b.dt-a.dt||(a.field==="capri"?-1:1));
+  html+=`<section class="sec"><h2>Kuchen- &amp; Capri-Chronik 🎂🧃</h2><div class="list">${cg.map(c=>`<div class="g"><div class="d">${c.dt.getDate()}. ${MON[c.dt.getMonth()]}<small>${esc(c.res)}</small></div><div class="mt"><div class="t">${c.field==="capri"?"🧃":"🎂"} ${esc(pName(c.name,US))}</div><div class="h">${c.field==="capri"?"40. Tor (Capri-Sonne)":"30. Tor (Kuchen)"} ${c.home?"gegen":"bei"} ${esc(c.opp)}</div></div><span></span></div>`).join("")||'<div class="empty">Noch kein Spiel mit 30 Toren – der Ofen bleibt kalt.</div>'}</div></section>`;
 
   html+=`<p class="note" style="margin:0">Alle Werte aus den genehmigten Spielberichten auf nuLiga. Namen sind zum Schutz der Kinder gekürzt.</p>`;
   return html;

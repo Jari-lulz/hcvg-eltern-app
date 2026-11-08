@@ -187,7 +187,8 @@ function Parse-Report([string]$html) {
 # Kuchen-Regel: Wer hat in einem Spiel das 30. Tor fuer uns geworfen?
 # Steht nicht im nuLiga-Bericht, aber in der nuScore-Ereignisliste (mit Spielstand und Werferin).
 $Us = 'HC Vorpommern-Greifswald'
-function Get-Scorer30([string]$mid, [bool]$usHome) {
+# Capri-Sonne-Regel: Wer das 40. Tor wirft, bringt einen 10er-Traeger Capri-Sonne mit.
+function Get-Scorer30([string]$mid, [bool]$usHome, [int]$target = 30) {
   try {
     Start-Sleep -Milliseconds 300
     $r = Invoke-WebRequest -UseBasicParsing "https://hbde-live.liga.nu/nuScoreLiveRestBackend/api/1/events/$mid" -Headers @{ 'User-Agent' = 'HCVG-Mannschafts-App (Spielplan-Update)' }
@@ -196,7 +197,7 @@ function Get-Scorer30([string]$mid, [bool]$usHome) {
       if ($x.event -ne 4 -and $x.event -ne 5) { continue }        # 4 = Tor, 5 = 7m-Tor
       if ([bool]$x.teamHome -ne $usHome) { continue }
       $pts = if ($usHome) { $x.pointsHome } else { $x.pointsGuest }
-      if ($pts -eq 30 -and $x.personFirstname -and $x.personFirstname -ne 'Anonym') {
+      if ($pts -eq $target -and $x.personFirstname -and $x.personFirstname -ne 'Anonym') {
         return (ShortName "$($x.personLastname), $($x.personFirstname)")
       }
     }
@@ -219,6 +220,7 @@ foreach ($key in $Leagues.Keys) {
   $games = Parse-Games $gamesPage
   $reports = [ordered]@{}
   $cake = [ordered]@{}
+  $capri = [ordered]@{}
   $outGames = @()
   foreach ($g in $games) {
     $mid = $g[7]
@@ -234,6 +236,17 @@ foreach ($key in $Leagues.Keys) {
           if ($who -and $g[8]) { [IO.File]::WriteAllText($cakeFile, $who, (New-Object Text.UTF8Encoding $false)) }
         }
         if ($who) { $cake[$mid] = $who }
+      }
+      if ($ourGoals -ge 40) {
+        $capFile = Join-Path $CacheDir "capri-$mid.txt"
+        $who40 = ''
+        if (Test-Path $capFile) { $who40 = [IO.File]::ReadAllText($capFile, [Text.Encoding]::UTF8).Trim() }
+        else {
+          Write-Host "  40. Tor in Spiel $mid"
+          $who40 = Get-Scorer30 $mid $usHome 40
+          if ($who40 -and $g[8]) { [IO.File]::WriteAllText($capFile, $who40, (New-Object Text.UTF8Encoding $false)) }
+        }
+        if ($who40) { $capri[$mid] = $who40 }
       }
     }
     if ($mid -and $g[5]) {
@@ -256,7 +269,7 @@ foreach ($key in $Leagues.Keys) {
     elseif ($g[9]) { $p = $g[9].Trim() -split ' '; if ($p.Count -ge 2) { $refShort = "$($p[1]) $($p[0].Substring(0,1))." } else { $refShort = $g[9] } }
     $outGames += , @($g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $refShort)
   }
-  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports; cake = $cake }
+  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports; cake = $cake; capri = $capri }
 }
 foreach ($k in $HallNames.Keys) { $out.halls[$k] = $HallNames[$k] }
 
