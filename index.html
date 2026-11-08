@@ -144,6 +144,16 @@ h3{font:700 17px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04e
 .ks .bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
 .ks .bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
 .ai:not(.pos):not(.neg) .ic{background:var(--court)}
+.kduel{display:grid;grid-template-columns:18px 1fr 1fr;gap:10px;align-items:start}
+.kduel.head,.kduel.seven{grid-template-columns:1fr 1fr;padding-left:28px}
+.kduel.head span{font:700 13px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kduel.head span:last-child{color:var(--accent)}
+.kduel .kr{font:800 16px/1.2 var(--display);font-style:normal;color:var(--muted)}
+.kc{display:flex;flex-direction:column;gap:3px;min-width:0}
+.kc b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc .ks{grid-template-columns:1fr 34px}
+.kc.us .ks .bar i{background:var(--win)}
+.kc .ks .bar i{background:var(--loss)}
 
 /* Kalender-Abo */
 .cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -865,10 +875,17 @@ function viewOpponent(k){
   html+=`<section class="sec"><h2>Direkter Zahlenvergleich</h2><div class="tbl-wrap"><table class="cmpt"><thead><tr><th>Wert</th><th>HC VG</th><th>${on}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="me">${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div></section>`;
 
   // Schlüsselspielerinnen
+  // Schlüsselspielerinnen: Gegner links, unsere rechts (Platz 1 gegen Platz 1 usw.)
   const top=P.players.slice(0,4);
-  html+=`<section class="sec"><h2>Schlüsselspielerinnen</h2><div class="card">${top.map(p=>{const sh=P.tot?p.g/P.tot:0;return `<div class="kp"><div class="kn"><b>${esc(p.name)}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} in ${p.gp} ${p.gp===1?"Spiel":"Spielen"} · Ø ${fmt1(p.g/p.gp)}</span></div><div class="ks"><span class="bar"><i style="width:${Math.round(sh*100)}%"></i></span><span>${Math.round(sh*100)} %</span></div></div>`;}).join("")||'<span class="note">Keine Torschützinnen erfasst.</span>'}
-    ${P.seven?`<span class="note">Siebenmeter-Schützin: <b>${esc(P.seven.name)}</b> (${P.seven.g7} von ${P.seven.a7} verwandelt)</span>`:""}
-    <span class="note">Balken = Anteil an allen Toren von ${on}.</span></div></section>`;
+  const kcell=(p,tot,team)=>{ if(!p) return `<div class="kc"></div>`; const sh=tot?Math.round(p.g/tot*100):0;
+    return `<div class="kc ${team===US?"us":""}"><b>${esc(pName(p.name,team))}</b><span class="note">${p.g} ${p.g===1?"Tor":"Tore"} · Ø ${fmt1(p.g/p.gp)}</span><div class="ks"><span class="bar"><i style="width:${sh}%"></i></span><span>${sh} %</span></div></div>`; };
+  const n4=Math.max(top.length,Math.min(4,M.players.length));
+  const sevenTxt=(s,team)=>s?`${esc(pName(s.name,team))} (${s.g7}/${s.a7})`:"–";
+  html+=`<section class="sec"><h2>Schlüsselspielerinnen im Duell</h2><div class="card">
+    <div class="kduel head"><span>${on}</span><span>HC VG</span></div>
+    ${Array.from({length:n4},(_,i)=>`<div class="kduel"><i class="kr">${i+1}</i>${kcell(top[i],P.tot,opp)}${kcell(M.players[i],M.tot,US)}</div>`).join("")||'<span class="note">Keine Torschützinnen erfasst.</span>'}
+    <div class="kduel seven"><span class="note">7m: ${sevenTxt(P.seven,opp)}</span><span class="note">7m: ${sevenTxt(M.seven,US)}</span></div>
+    <span class="note">Prozent = Anteil an allen Toren der eigenen Mannschaft.</span></div></section>`;
 
   // Hinweise
   const S=leagueStats(k), T=Object.values(S.teams).filter(t=>t.gp), n=T.length;
