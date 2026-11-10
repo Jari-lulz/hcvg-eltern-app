@@ -208,6 +208,8 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .day .tm{grid-area:t;font:700 20px/1.15 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .day .who{grid-area:w;font:700 13px/1 var(--display);letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
 .day .who.both{background:var(--tape);color:var(--tape-ink);border-color:var(--tape)}
+.train .wa{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.4}
+.train .wa .em{font-size:20px;line-height:1}
 .train .where{font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .train .where>span{min-width:0}
 
@@ -688,7 +690,8 @@ function trainingTile(){
     <div class="days">${t.days.map(([a,full,time,who])=>`<div class="day">
       <b>${esc(a)}</b><span class="dn">${esc(full)}</span>
       <span class="tm">${time?esc(time)+" Uhr":"Uhrzeit folgt"}</span>
-      <span class="who">${who==="CD"?"C+D-Jugend":esc(who)+"-Jugend"}</span></div>`).join("")}</div>
+      ${who==="X"?"":`<span class="who">${who==="CD"?"C+D-Jugend":esc(who)+"-Jugend"}</span>`}</div>`).join("")}</div>
+    ${t.days.some(d=>d[3]==="X")?`<div class="wa"><span class="em" aria-hidden="true">📢</span><span><b>Welche Jugend trainiert?</b><br>Das steht für jeden Tag im WhatsApp-Channel der Mannschaft.</span></div>`:""}
     <div class="where"><span><b>${esc(t.place)}</b><br><span class="note">${esc(hallName(t.hall))} · ${esc(hallAddr(t.hall))}</span></span>
       <a class="btn line" href="${mapsUrl(t.hall)}" target="_blank" rel="noopener">${ICON_PIN} Google Maps</a></div>
   </section>`;

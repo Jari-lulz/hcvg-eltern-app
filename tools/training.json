@@ -1,14 +1,14 @@
 {
-  "_hinweis": "Trainingszeiten fuer App und Kalender. days: [Kurz, Tag, Uhrzeit, Jugend]. Jugend: C, D oder CD (= gemeinsam). from/until: Zeitraum der Kalendertermine.",
-  "title": "Neue Trainingszeiten",
-  "isNew": true,
+  "_hinweis": "Trainingszeiten fuer App und Kalender. days: [Kurz, Tag, Uhrzeit, Jugend]. Jugend: C, D, CD (= gemeinsam) oder X (= wechselt, steht im WhatsApp-Channel). from/until: Zeitraum der Kalendertermine.",
+  "title": "Trainingszeiten",
+  "isNew": false,
   "place": "Halle 1, Greifswald",
   "hall": "16830",
   "from": "2026-11-02",
   "until": "2027-06-30",
   "days": [
-    ["Di", "Dienstag", "18:00–19:00", "C"],
-    ["Do", "Donnerstag", "17:30–19:00", "D"],
-    ["Fr", "Freitag", "16:45–18:00", "CD"]
+    ["Di", "Dienstag", "18:00–19:00", "X"],
+    ["Do", "Donnerstag", "17:30–19:00", "X"],
+    ["Fr", "Freitag", "16:45–18:00", "X"]
   ]
 }

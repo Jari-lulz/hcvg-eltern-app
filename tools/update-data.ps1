@@ -359,8 +359,9 @@ foreach ($day in $Training.days) {
   $t1 = $Matches[1]; $t2 = $Matches[2]
   $first = $tFrom; while ([int]$first.DayOfWeek -ne $dowNum[$short]) { $first = $first.AddDays(1) }
   $s = $first.Add([timespan]::Parse($t1)); $e = $first.Add([timespan]::Parse($t2))
-  $label = if ($who -eq 'CD') { 'D- und C-Jugend (gemeinsam)' } else { "$who-Jugend" }
+  $label = if ($who -eq 'CD') { 'D- und C-Jugend (gemeinsam)' } elseif ($who -eq 'X') { 'C-/D-Jugend' } else { "$who-Jugend" }
   $desc = @("Training $label", "$full $t1 - $t2 Uhr", "Ort: $($Training.place)")
+  if ($who -eq 'X') { $desc += 'Welche Jugend an diesem Tag trainiert, steht im WhatsApp-Channel der Mannschaft.' }
   if ($tWhere) { $desc += "Halle: $tWhere" }
   if ($tMaps) { $desc += "Route: $tMaps" }
   $desc += "Alle Infos: $AppUrl"
@@ -375,8 +376,8 @@ foreach ($day in $Training.days) {
   $lines += 'END:VEVENT'
   $ev = ($lines | ForEach-Object { IcsFold $_ }) -join "`r`n"
   $tEvents['CD'] += , $ev
-  if ($who -match 'C') { $tEvents['C'] += , $ev }
-  if ($who -match 'D') { $tEvents['D'] += , $ev }
+  if ($who -match 'C|X') { $tEvents['C'] += , $ev }
+  if ($who -match 'D|X') { $tEvents['D'] += , $ev }
 }
 
 $tz = @('BEGIN:VTIMEZONE', 'TZID:Europe/Berlin',
