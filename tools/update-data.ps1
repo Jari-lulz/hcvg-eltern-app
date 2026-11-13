@@ -279,7 +279,7 @@ foreach ($key in $Leagues.Keys) {
     $nowU = [DateTime]::UtcNow
     foreach ($m in $mj.meetings) {
       if ($m.teamHome -ne $Us -and $m.teamGuest -ne $Us) { continue }
-      $sch = [DateTime]::Parse($m.scheduled, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal)
+      $sch = [DateTimeOffset]::Parse([string]$m.scheduled, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime
       if ([Math]::Abs(($sch - $nowU).TotalDays) -gt 3) { continue }
       $live += , @($m.teamHome, $m.teamGuest, $sch.ToString('yyyy-MM-ddTHH:mm:ssZ'), [int]$m.matchesHome, [int]$m.matchesGuest, [bool]$m.live, [int]$m.halfTimeScoreHome, [int]$m.halfTimeScoreGuest)
     }
