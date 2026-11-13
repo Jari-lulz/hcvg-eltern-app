@@ -269,7 +269,22 @@ foreach ($key in $Leagues.Keys) {
     elseif ($g[9]) { $p = $g[9].Trim() -split ' '; if ($p.Count -ge 2) { $refShort = "$($p[1]) $($p[0].Substring(0,1))." } else { $refShort = $g[9] } }
     $outGames += , @($g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $refShort)
   }
-  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports; cake = $cake; capri = $capri }
+  # Live-Spielstand (nuScore): eine Abfrage pro Liga, nur unsere Spiele von +/- 3 Tagen
+  # [Heim, Gast, Anwurf (UTC, ISO), Tore Heim, Tore Gast, live, HZ Heim, HZ Gast]
+  $live = @()
+  try {
+    $ts = [int64]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() / 15) * 15
+    $r = Invoke-WebRequest -UseBasicParsing "https://hbde-live.liga.nu/nuScoreLiveRestBackend/api/1/meetings/$($L.group)/time/$ts" -Headers @{ 'User-Agent' = 'HCVG-Mannschafts-App (Spielplan-Update)' }
+    $mj = ([Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray())) | ConvertFrom-Json
+    $nowU = [DateTime]::UtcNow
+    foreach ($m in $mj.meetings) {
+      if ($m.teamHome -ne $Us -and $m.teamGuest -ne $Us) { continue }
+      $sch = [DateTime]::Parse($m.scheduled, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal)
+      if ([Math]::Abs(($sch - $nowU).TotalDays) -gt 3) { continue }
+      $live += , @($m.teamHome, $m.teamGuest, $sch.ToString('yyyy-MM-ddTHH:mm:ssZ'), [int]$m.matchesHome, [int]$m.matchesGuest, [bool]$m.live, [int]$m.halfTimeScoreHome, [int]$m.halfTimeScoreGuest)
+    }
+  } catch { Write-Host "  nuScore-Liveliste $($L.group) nicht erreichbar" }
+  $out.leagues[$key] = [ordered]@{ name = $L.name; group = $L.group; table = $table; games = $outGames; reports = $reports; cake = $cake; capri = $capri; live = $live }
 }
 foreach ($k in $HallNames.Keys) { $out.halls[$k] = $HallNames[$k] }
 
@@ -283,6 +298,11 @@ $GameLen = @{ D = 40; C = 50 }
 $AppUrl  = 'https://jari-lulz.github.io/hcvg-mannschafts-app/'
 $ae = [char]0xE4
 
+# Route-Link: Adresse mit Hausnummer -> nur Adresse; ohne Hausnummer -> Hallenname + Adresse (wie in der App)
+function MapsLink([string]$name, [string]$addr) {
+  $dest = if ($addr -and $addr -match '\d+[a-z]?\s*(-\s*\d+)?\s*,') { $addr } else { (@($name, $addr) | Where-Object { $_ }) -join ', ' }
+  return 'https://www.google.com/maps/dir/?api=1&destination=' + [uri]::EscapeDataString($dest)
+}
 function IcsText([string]$s) { return ($s -replace '\\', '\\\\' -replace ';', '\;' -replace ',', '\,' -replace "`r?`n", '\n') }
 function IcsFold([string]$line) {
   # Zeilen laenger als 74 Zeichen umbrechen (Folgezeile beginnt mit Leerzeichen)
@@ -312,7 +332,7 @@ foreach ($key in $out.leagues.Keys) {
     elseif ($loc -and $HallNames[$loc]) { $hallN = $HallNames[$loc] }
     $where = (@($hallN, $hallA) | Where-Object { $_ }) -join ', '
     $maps = ''
-    if ($where) { $maps = 'https://www.google.com/maps/dir/?api=1&destination=' + [uri]::EscapeDataString($where) }
+    if ($where) { $maps = MapsLink $hallN $hallA }
     $desc = @()
     if ($usHome) { $desc += 'Heimspiel' } else { $desc += "Ausw${ae}rtsspiel" }
     $lines = @('BEGIN:VEVENT', "UID:$uid", "DTSTAMP:$stamp")
@@ -352,7 +372,7 @@ $tFrom = [datetime]::ParseExact($Training.from, 'yyyy-MM-dd', $null)
 $tUntil = [datetime]::ParseExact($Training.until, 'yyyy-MM-dd', $null)
 $tWhere = ''
 if ($Training.hall -and $HallInfo.($Training.hall)) { $tWhere = ($HallInfo.($Training.hall)[0] + ', ' + $HallInfo.($Training.hall)[1]) }
-$tMaps = if ($tWhere) { 'https://www.google.com/maps/dir/?api=1&destination=' + [uri]::EscapeDataString($tWhere) } else { '' }
+$tMaps = if ($tWhere) { MapsLink $HallInfo.($Training.hall)[0] $HallInfo.($Training.hall)[1] } else { '' }
 foreach ($day in $Training.days) {
   $short, $full, $times, $who = $day[0], $day[1], $day[2], $day[3]
   if ($times -notmatch '(\d{1,2}:\d{2})\D+(\d{1,2}:\d{2})') { continue }

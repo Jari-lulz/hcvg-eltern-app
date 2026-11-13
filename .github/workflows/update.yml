@@ -5,8 +5,11 @@ on:
   schedule:
     # Am Wochenende plus Mittwochabend, sonst finden keine Spiele statt.
     # Zeiten in UTC (Winterzeit: deutsche Zeit = UTC + 1, Sommerzeit: UTC + 2)
-    - cron: "*/30 6-20 * * 6"     # Samstag: alle 30 Minuten, 7:00 bis 21:30 Uhr
-    - cron: "*/30 6-16 * * 0"     # Sonntag: alle 30 Minuten, 7:00 bis 17:30 Uhr
+    # Zur Spielzeit alle 10 Minuten (fast-live Spielstand), sonst alle 30 Minuten
+    - cron: "0,30 6 * * 6,0"      # Sa + So: 7:00 und 7:30 Uhr
+    - cron: "*/10 7-17 * * 6"     # Samstag: alle 10 Minuten, 8:00 bis 18:50 Uhr
+    - cron: "*/30 18-20 * * 6"    # Samstag abends: alle 30 Minuten bis 21:30 Uhr
+    - cron: "*/10 7-16 * * 0"     # Sonntag: alle 10 Minuten, 8:00 bis 17:50 Uhr
     - cron: "0 17 * * 0"          # Sonntag: letztes Update um 18:00 Uhr
     - cron: "0 17 * * 3"          # Mittwoch 18:00 Uhr (falls ein Nachholspiel war)
   push:

@@ -181,6 +181,15 @@ figure.hero:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
 .nc .date{flex:1;font:800 19px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nc .count{font-size:13px;padding:5px 8px;white-space:nowrap}
 .nc .times>div{padding:5px 10px;flex-wrap:nowrap;align-items:center;gap:8px;border-radius:10px}
+/* Spielstand in der Karte: gleiche Höhe wie die Zeile Treff/Anwurf */
+.times.sc1{grid-template-columns:1fr}
+.nc .scbox{justify-content:center}
+.scbox b{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.scbox small{display:inline-flex;align-items:center;gap:6px}
+.scbox.live{background:#e63946;color:#fff}
+.scbox.end{background:var(--tape);color:var(--tape-ink)}
+.scbox .dot{width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block}
+@media (prefers-reduced-motion:no-preference){.scbox .dot{animation:pulse 1.4s infinite}}
 .nc .times small{flex-basis:auto;font-size:11px}
 .nc .times b{font-size:20px;line-height:1}
 .nc .times span{font-size:12px}
@@ -472,7 +481,10 @@ const sn = n => SHORT[n]||n;
 const hallName = l => l ? (HALLS[l]?.[0] || DATA.halls?.[l] || "Halle") : "Halle offen";
 const hallAddr = l => HALLS[l]?.[1] || "";
 const hallCity = l => { const a=hallAddr(l); return a ? a.split(", ").pop() : ""; };
-const mapsUrl = l => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(hallName(l)+(hallAddr(l)?", "+hallAddr(l):""));
+// Route: Adresse mit Hausnummer → nur die Adresse (lange Hallennamen findet Google Maps nicht immer zuverlässig);
+// Adresse ohne Hausnummer (z. B. „Am Klosterberg“) → Hallenname + Adresse, damit Maps die Halle selbst findet
+const mapsDest = l => { const a=hallAddr(l), n=hallName(l); return a&&/\d+[a-z]?\s*(-\s*\d+)?\s*,/i.test(a) ? a : [n,a].filter(Boolean).join(", "); };
+const mapsUrl = l => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(mapsDest(l));
 const liveUrl = g => "https://hbde-live.liga.nu/nuScoreLive/#/groups/"+g;
 const nuUrl = g => "https://hvmv-handball.liga.nu/cgi-bin/WebObjects/nuLigaHBDE.woa/wa/groupPage?championship=BHV+Ost+26%2F27&group="+g;
 const ICON_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
@@ -702,17 +714,48 @@ const MONL=["Januar","Februar","März","April","Mai","Juni","Juli","August","Sep
 const hhmm = d => String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 
 // Karte "Nächstes Spiel" je Jugend: Treff (1 Stunde vorher), Anwurf, Countdown, Route, Live-Ticker
+// Spiel für die Startseite: das Spiel dieser Woche bleibt bis Sonntag 23:59 Uhr stehen (mit Spielstand),
+// danach kommt das nächste. Ein noch kommendes Spiel derselben Woche hat Vorrang.
+function cardGame(k){
+  const mine=ALL.filter(x=>x.mine&&x.lg===k&&x.dt), n=now();
+  const sun=new Date(n); sun.setDate(sun.getDate()+((7-sun.getDay())%7)); sun.setHours(23,59,59,999);
+  const mon=new Date(sun); mon.setDate(sun.getDate()-6); mon.setHours(0,0,0,0);
+  const week=mine.filter(x=>x.dt>=mon&&x.dt<=sun).sort((a,b)=>a.dt-b.dt);
+  return week.find(x=>x.dt>n) || week[week.length-1] || upcoming(mine).find(x=>x.dt);
+}
+// Live-Stand aus nuScore (data.js: leagues[k].live = [Heim, Gast, Anwurf UTC, Tore H, Tore G, live, HZ H, HZ G])
+function liveFor(g){
+  const e=(LEAGUES[g.lg].live||[]).find(e=>{const d=new Date(e[2]);return d.toDateString()===g.dt.toDateString()&&(e[0]===US||e[1]===US);});
+  if(!e) return null;
+  const sw=(e[0]===US)!==(g.home===US);   // Reihenfolge wie in unserer Karte
+  return {h:sw?e[4]:e[3], a:sw?e[3]:e[4], live:e[5], hh:sw?e[7]:e[6], ha:sw?e[6]:e[7]};
+}
+// Zustand der Karte: vor dem Spiel, läuft, vorbei
+function cardState(g){
+  const n=now().getTime(), start=g.dt.getTime(), end=start+(LEN[g.lg]+25)*60e3, lv=liveFor(g);
+  if(g.res){ const o=outcome(g); return {k:"end",score:g.res.replace(":"," : "),label:"Endstand",sub:o==="w"?"Sieg":o==="l"?"Niederlage":o?"Remis":""}; }
+  if(lv&&lv.live) return {k:"live",score:`${lv.h} : ${lv.a}`,label:"Live",sub:lv.hh+lv.ha>0?`Halbzeit ${lv.hh}:${lv.ha}`:"1. Halbzeit"};
+  if(n<start) return {k:"pre"};
+  if(lv&&lv.h+lv.a>0) return n>end?{k:"end",score:`${lv.h} : ${lv.a}`,label:"Endstand",sub:"vorläufig"}:{k:"live",score:`${lv.h} : ${lv.a}`,label:"Spielstand",sub:"wird aktualisiert"};
+  return n<end?{k:"run",score:"– : –",label:"Spiel läuft",sub:"Spielstand folgt"}:{k:"wait",score:"– : –",label:"Spiel vorbei",sub:"Ergebnis folgt"};
+}
 function nextCard(k){
   const L=LEAGUES[k];
-  const g=upcoming(ALL.filter(x=>x.mine&&x.lg===k)).find(x=>x.dt);
-  if(!g) return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend"><div class="when"><span class="lg">${k}-Jugend</span></div><p class="hall" style="margin:0">Zurzeit ist kein Spiel angesetzt.</p></section>`;
-  const home=g.home===US;
-  // kompakte Karte: Kopfzeile mit Datum, Treff/Anwurf in einer Zeile, Halle einzeilig
-  const times = g.time
+  const g=cardGame(k);
+  if(!g) return `<section class="board nc" data-card="${k}" aria-label="Nächstes Spiel ${k}-Jugend"><div class="when"><span class="lg">${k}-Jugend</span></div><p class="hall" style="margin:0">Zurzeit ist kein Spiel angesetzt.</p></section>`;
+  const home=g.home===US, cs=cardState(g);
+  // kompakte Karte: Kopfzeile mit Datum, Treff/Anwurf in einer Zeile, Halle einzeilig.
+  // Ab Anwurf ersetzt der Spielstand die Zeile Treff/Anwurf in derselben Höhe.
+  const times = cs.k!=="pre"
+    ? `<div class="times sc1"><div class="scbox ${cs.k}"><small>${cs.k==="live"?'<i class="dot" aria-hidden="true"></i>':""}${esc(cs.label)}</small><b>${esc(cs.score)}</b><span>${esc(cs.sub)}</span></div></div>`
+    : g.time
     ? `<div class="times"><div class="treff"><small>Treff</small><b>${hhmm(new Date(g.dt-3600e3))}</b><span>Uhr</span></div><div><small>Anwurf</small><b>${esc(g.time)}</b><span>Uhr</span></div></div>`
     : `<div class="times"><div><small>Anwurf</small><b>offen</b></div></div>`;
-  return `<section class="board nc" aria-label="Nächstes Spiel ${k}-Jugend">
-    <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span><span class="count${countdown(g.dt)==="Matchday"?" md":""}">${countdown(g.dt)==="Matchday"?"🔥 Matchday":countdown(g.dt)}</span></div>
+  const chip = cs.k==="live"||cs.k==="run" ? `<span class="count md">● Live</span>`
+    : cs.k==="end"||cs.k==="wait" ? `<span class="count">Gespielt</span>`
+    : `<span class="count${countdown(g.dt)==="Matchday"?" md":""}">${countdown(g.dt)==="Matchday"?"🔥 Matchday":countdown(g.dt)}</span>`;
+  return `<section class="board nc" data-card="${k}" aria-label="Nächstes Spiel ${k}-Jugend">
+    <div class="when"><span class="lg">${k}-Jugend</span><span class="date">${WD[g.dt.getDay()]}, ${g.dt.getDate()}. ${MONL[g.dt.getMonth()]}</span>${chip}</div>
     ${times}
     <div class="match"><div class="team ${home?"us":""}">${esc(home?US:sn(g.home))}</div><div class="vs">VS</div><div class="team away ${home?"":"us"}">${esc(home?sn(g.away):US)}</div></div>
     <div class="hall"><b>${home?"Heimspiel":"Auswärts"}</b> · ${esc(hallName(g.loc))}${hallCity(g.loc)?", "+esc(hallCity(g.loc).replace(/^\d{5}\s*/,"")):""}${g.note?` · ${esc(g.note)}`:""}</div>
@@ -1284,6 +1327,30 @@ function sizeFold(){
   if(f.offsetHeight<need){ f.style.minHeight=need+"px"; f.style.marginBottom="22px"; }
 }
 window.addEventListener("resize",()=>{ if(current==="us"&&window.innerWidth!==foldW) sizeFold(); });
+
+// Während eines Spiels (15 Min. vor Anwurf bis 90 Min. nach Spielende): alle 2 Minuten den neuesten
+// Datenstand holen und nur die beiden Spielkarten austauschen – die Seite springt dabei nicht.
+// Neue Daten kommen am Spieltag etwa alle 10 Minuten (GitHub-Update), schneller lohnt sich nicht.
+function liveWindow(){
+  const n=Date.now();
+  return ["C","D"].some(k=>{ const g=cardGame(k); if(!g||g.res) return false; const t=g.dt.getTime(); return n>t-15*60e3&&n<t+(LEN[k]+115)*60e3; });
+}
+async function refreshLive(){
+  if(document.hidden||!liveWindow()) return;
+  try{
+    const txt=await (await fetch("data.js?t="+Date.now(),{cache:"no-store"})).text();
+    const j=JSON.parse(txt.slice(txt.indexOf("{"),txt.lastIndexOf("}")+1));
+    for(const k of ["C","D"]){
+      const nl=j.leagues&&j.leagues[k]; if(!nl) continue;
+      LEAGUES[k].live=nl.live||[];
+      const g=cardGame(k);
+      if(g&&!g.res){ const row=(nl.games||[]).find(r=>r[3]===g.home&&r[4]===g.away&&r[5]); if(row) g.res=row[5]; }
+    }
+    if(current==="us") for(const k of ["C","D"]){ const el=view.querySelector(`[data-card="${k}"]`); if(el) el.outerHTML=nextCard(k); }
+  }catch(e){}
+}
+setInterval(refreshLive,120e3);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refreshLive(); });
 function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===current));
   view.innerHTML = current==="us"?viewUs():current==="kader"?viewKader():current==="ana"?viewAnalysis():viewLeague(current);
